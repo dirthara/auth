@@ -1,6 +1,6 @@
 {
     "name": "dirthara/authorisation",
-    "description": "Authorisation for the Dirthara framework",
+    "description": "Standalone policy-based authorisation for PHP and the Dirthara framework",
     "type": "library",
     "homepage": "https://dirthara.github.io/docs/",
     "require": {
