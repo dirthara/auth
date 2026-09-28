@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Dirthara\Authorisation;
 
 use Dirthara\Authorisation\Contract\Policy;
+use Dirthara\Authorisation\Exception\InvalidPolicyException;
 use Dirthara\Authorisation\Exception\AmbiguousPolicyException;
 use Dirthara\Authorisation\Contract\Authoriser as AuthoriserContract;
 
-use function iterator_to_array;
+use function count;
 
 final readonly class Authoriser implements AuthoriserContract
 {
@@ -18,13 +19,26 @@ final readonly class Authoriser implements AuthoriserContract
     private array $policies;
 
     /**
-     * @param iterable<Policy> $policies
+     * @param iterable<mixed> $policies
+     *
+     * @throws InvalidPolicyException
      */
     public function __construct(
         iterable $policies,
         private DecisionStrategy $strategy = DecisionStrategy::OnlyOne,
     ) {
-        $this->policies = iterator_to_array($policies, preserve_keys: false);
+        $valid = [];
+
+        // @mago-expect analysis:mixed-assignment Each value is checked to be a policy before it is kept
+        foreach ($policies as $policy) {
+            if (!$policy instanceof Policy) {
+                throw InvalidPolicyException::forValue($policy, count($valid));
+            }
+
+            $valid[] = $policy;
+        }
+
+        $this->policies = $valid;
     }
 
     public function authorise(AuthorisationContext $context): AuthorisationResult

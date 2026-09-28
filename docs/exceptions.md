@@ -39,11 +39,12 @@ result that `AuthorisationDeniedException` carries in `result`.
 
 ## Exceptions thrown
 
-| Exception                      | Extends            | Thrown when                                                           |
-|--------------------------------|--------------------|-----------------------------------------------------------------------|
-| `AmbiguousPolicyException`     | `RuntimeException` | Under `OnlyOne`, more than one policy applies to one context.        |
-| `NotApplicableResultException` | `RuntimeException` | `withPolicy()` is called on a `NotApplicable` result.                 |
-| `AuthorisationDeniedException` | `RuntimeException` | `Enforcer::ensure()` gets a `Denied` or `NotApplicable` result.       |
+| Exception                      | Extends                    | Thrown when                                                           |
+|--------------------------------|----------------------------|-----------------------------------------------------------------------|
+| `AmbiguousPolicyException`     | `RuntimeException`         | Under `OnlyOne`, more than one policy applies to one context.         |
+| `NotApplicableResultException` | `RuntimeException`         | `withPolicy()` is called on a `NotApplicable` result.                 |
+| `AuthorisationDeniedException` | `RuntimeException`         | `Enforcer::ensure()` gets a `Denied` or `NotApplicable` result.       |
+| `InvalidPolicyException`       | `InvalidArgumentException` | A value passed to `Authoriser` does not implement `Policy`.           |
 
 All live in the `Dirthara\Authorisation\Exception` namespace.
 
@@ -92,3 +93,13 @@ The `result` property holds the result that was not allowed, with its status, de
 | `policy`      | `?string`             | The type of the deciding policy, or `null` for a collective result.  |
 | `messageKey`  | `?string`             | The deciding denial's message key, escaped, without its parameters.  |
 | `consulted`   | `list<string>`        | The types of the policies the authoriser asked, in order.            |
+
+## InvalidPolicyException
+
+The message names the position of the first value that is not a policy, counted from `0` in the order the iterable
+yields them, and its type. The value itself is never recorded, since a misconfigured list can hold anything.
+
+| Context key | Type     | Meaning                                                       |
+|-------------|----------|---------------------------------------------------------------|
+| `position`  | `int`    | The position of the value, counted from `0`.                  |
+| `type`      | `string` | The type of the value, such as `string` or its class name.    |

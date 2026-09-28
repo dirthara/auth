@@ -17,6 +17,7 @@ use Dirthara\Authorisation\AuthorisationDenial;
 use Dirthara\Authorisation\AuthorisationResult;
 use Dirthara\Authorisation\AuthorisationContext;
 use Dirthara\Authorisation\Tests\Fixtures\FixedPolicy;
+use Dirthara\Authorisation\Exception\InvalidPolicyException;
 use Dirthara\Authorisation\Exception\AmbiguousPolicyException;
 use Dirthara\Authorisation\Contract\Authoriser as AuthoriserContract;
 
@@ -543,6 +544,59 @@ final class AuthoriserTest extends TestCase
         self::assertSame($deciding, $result->policy);
         self::assertSame([$deciding], $result->consulted);
         self::assertEquals([PolicyDecision::allowed($deciding)], $result->decisions);
+    }
+
+    #[Test]
+    public function it_takes_an_array_of_policies(): void
+    {
+        $first = self::abstaining();
+        $second = self::allowing();
+
+        $result = new Authoriser([$first, $second])->authorise(self::context());
+
+        self::assertSame([$first, $second], $result->consulted);
+    }
+
+    #[Test]
+    #[DataProvider('invalidPolicies')]
+    public function it_rejects_a_value_that_is_not_a_policy(mixed $value, string $type): void
+    {
+        try {
+            new Authoriser([self::allowing(), $value, self::allowing()]);
+            self::fail('The value was accepted as a policy.');
+        } catch (InvalidPolicyException $exception) {
+            self::assertSame(['position' => 1, 'type' => $type], $exception->context);
+        }
+    }
+
+    #[Test]
+    public function it_rejects_a_value_that_is_not_a_policy_from_a_generator(): void
+    {
+        $generator = (static function (): Generator {
+            yield 'first' => new FixedPolicy(AuthorisationResult::allowed());
+            yield 'second' => new FixedPolicy(AuthorisationResult::denied());
+            yield 'third' => 'edit';
+        })();
+
+        try {
+            new Authoriser($generator);
+            self::fail('The value was accepted as a policy.');
+        } catch (InvalidPolicyException $exception) {
+            self::assertSame(['position' => 2, 'type' => 'string'], $exception->context);
+        }
+    }
+
+    /**
+     * @return iterable<string, array{mixed, string}>
+     */
+    public static function invalidPolicies(): iterable
+    {
+        yield 'string' => ['ArticlePolicy', 'string'];
+        yield 'integer' => [1, 'int'];
+        yield 'null' => [null, 'null'];
+        yield 'array' => [[], 'array'];
+        yield 'object' => [new stdClass(), stdClass::class];
+        yield 'closure' => [static fn(): bool => true, 'Closure'];
     }
 
     /**

@@ -71,7 +71,9 @@ $authoriser = new Authoriser([new ArticlePolicy(), new CommentPolicy()]);
 $result = $authoriser->authorise(new AuthorisationContext($user, 'edit', $article));
 ```
 
-Keys of the iterable are ignored, so a generator that repeats a key still passes every policy.
+Keys of the iterable are ignored, so a generator that repeats a key still passes every policy. Every value must implement
+`Dirthara\Authorisation\Contract\Policy`; the constructor checks each one as it reads it and throws
+`InvalidPolicyException` for the first that does not, rather than failing later with a PHP error.
 
 ## Decision strategies
 
