@@ -223,11 +223,11 @@ Every placeholder `{name}` becomes the parameter of the same name, rendered the 
 | A string, integer, or float | Its value.                                |
 | `true` or `false`           | `true` or `false`.                        |
 | `null`                      | `null`.                                   |
-| A backed enum case          | Its value.                                |
-| Any other enum case         | Its name.                                 |
 | A `Stringable`              | Its string value.                         |
 | An array                    | Its rendered values, joined with `, `.    |
-| Any other object            | Its class name.                           |
+| Any other object            | Its class name, also for an enum case.    |
+
+Pass an enum's `value` or `name` as the parameter to show it in the message, such as `['role' => $role->value]`.
 
 A placeholder without a parameter stays as it is, and a parameter without a placeholder is ignored. Placeholders are
 filled in once, so a parameter that contains a placeholder is not filled in again. Unlike validation errors, a denial has

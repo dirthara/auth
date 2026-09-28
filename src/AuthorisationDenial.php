@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Dirthara\Authorisation;
 
-use UnitEnum;
-use BackedEnum;
 use Stringable;
 
 use function strtr;
@@ -44,8 +42,6 @@ final class AuthorisationDenial
         return match (true) {
             is_bool($value) => $value ? 'true' : 'false',
             $value === null => 'null',
-            $value instanceof BackedEnum => (string) $value->value,
-            $value instanceof UnitEnum => $value->name,
             is_scalar($value), $value instanceof Stringable => (string) $value,
             is_array($value) => implode(', ', array_map(self::render(...), $value)),
             default => get_debug_type($value),

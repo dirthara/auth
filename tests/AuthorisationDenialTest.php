@@ -95,9 +95,9 @@ final class AuthorisationDenialTest extends TestCase
         yield 'true' => [true, 'true'];
         yield 'false' => [false, 'false'];
         yield 'null' => [null, 'null'];
-        yield 'string backed enum' => [Role::Admin, 'admin'];
-        yield 'integer backed enum' => [Level::High, '3'];
-        yield 'pure enum' => [Ability::Edit, 'Edit'];
+        yield 'string backed enum' => [Role::Admin, Role::class];
+        yield 'integer backed enum' => [Level::High, Level::class];
+        yield 'pure enum' => [Ability::Edit, Ability::class];
         yield 'stringable' => [
             new class() implements Stringable {
                 public function __toString(): string
@@ -110,14 +110,14 @@ final class AuthorisationDenialTest extends TestCase
         yield 'list' => [[1, 2], '1, 2'];
         yield 'mixed list' => [['a', true, null, 1.5], 'a, true, null, 1.5'];
         yield 'nested list' => [[1, [2, 3]], '1, 2, 3'];
-        yield 'list of enums' => [[Role::Admin, Ability::Edit], 'admin, Edit'];
+        yield 'list of enums' => [[Role::Admin, Ability::Edit], Role::class . ', ' . Ability::class];
         yield 'empty array' => [[], ''];
         yield 'object' => [new stdClass(), 'stdClass'];
     }
 
     #[Test]
     #[DataProvider('parameters')]
-    public function it_renders_each_kind_of_parameter(mixed $parameter, string $rendered): void
+    public function it_renders_each_kind_of_parameter_as_validation_errors_do(mixed $parameter, string $rendered): void
     {
         $denial = new AuthorisationDenial('The value is {value}.', parameters: ['value' => $parameter]);
 
