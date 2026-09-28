@@ -1,7 +1,7 @@
 ---
 id: results
 title: Authorisation results
-sidebar_position: 3
+sidebar_position: 4
 description: What an authorisation returns, the policy that made the decision, and why a result was denied.
 ---
 

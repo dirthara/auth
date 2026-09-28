@@ -4,7 +4,7 @@
 
 | Version | Status |
 | --- | --- |
-| 0.1.x | Active development; unreleased |
+| 0.1.x | Supported |
 | Older | Unsupported |
 
 While the package is pre-1.0, only the latest release line receives fixes.
@@ -22,10 +22,22 @@ advisory crediting the reporter unless they prefer otherwise.
 
 ## Scope
 
-This repository currently contains package infrastructure and no public
-implementation. Report security issues in this package's code or development
-configuration. As the package's behaviour is introduced, update this policy
-with its security boundaries.
+The package decides whether an actor may perform an ability on a subject by asking the policies an application
+registers. In scope are flaws in that decision, such as:
+
+- a result that allows when the only policy that applied denied, or that denies when it allowed;
+- more than one applicable policy producing a result instead of an `AmbiguousPolicyException`;
+- a result carrying the wrong deciding policy or the wrong denial;
+- an exception message or context exposing the actor or subject beyond their types, or letting a value forge a log
+  line.
+
+Out of scope:
+
+- The decisions an application's own policies make. A policy that allows too much is application code.
+- What an application does with a `NotApplicable` result. The package reports that no policy applied; treating that as
+  a denial is the application's responsibility.
+- How an application presents a denial. A denial message is written by the policy and can name the actor or describe
+  the subject, so showing it to an end user is the application's choice.
 
 Bugs in PHP or third-party dependencies should also be reported upstream.
 Application code and the sensitivity of data an application chooses to store

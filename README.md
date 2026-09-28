@@ -4,9 +4,10 @@
 
 # Dirthara Authorisation
 
-Authorisation for the Dirthara framework. This repository is the initial package scaffold; no public API or release is available yet. Usage 
-documentation lives in [`docs`](docs/intro.md) and is published on the Dirthara documentation site at 
-<https://dirthara.github.io/docs/>, which documents every package in the framework.
+Authorisation for the Dirthara framework: policies decide whether an actor may perform an ability on a subject, and an
+authoriser asks every policy and returns one explained result. Usage documentation lives in [`docs`](docs/intro.md) and
+is published on the Dirthara documentation site at <https://dirthara.github.io/docs/>, which documents every package in
+the framework.
 
 ## Installation
 
@@ -45,10 +46,7 @@ docker compose down
 docker compose exec php composer test
 ```
 
-Tests belong in `tests`, under `Dirthara\Authorisation\Tests`. Source belongs in`src`, under `Dirthara\Authorisation`.
-
-The package starts with its exception interface, `Dirthara\Authorisation\Exception\AuthorisationException`, and the 
-`HasExceptionContext` trait every exception uses to carry its context, both covered by tests.
+Tests belong in `tests`, under `Dirthara\Authorisation\Tests`. Source belongs in `src`, under `Dirthara\Authorisation`.
 
 ## Code quality
 
