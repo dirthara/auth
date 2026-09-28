@@ -47,7 +47,7 @@ docker compose exec php composer test
 
 Tests belong in `tests`, under `Dirthara\Authorisation\Tests`. Source belongs in`src`, under `Dirthara\Authorisation`.
 
-The package starts with its exception interface, `Dirthara\Authorisation\Exception\AuthException`, and the 
+The package starts with its exception interface, `Dirthara\Authorisation\Exception\AuthorisationException`, and the 
 `HasExceptionContext` trait every exception uses to carry its context, both covered by tests.
 
 ## Code quality

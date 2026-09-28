@@ -13,7 +13,7 @@ use Dirthara\Authorisation\AuthorisationContext;
 use function sprintf;
 use function get_debug_type;
 
-final class AmbiguousPolicyException extends RuntimeException implements AuthException
+final class AmbiguousPolicyException extends RuntimeException implements AuthorisationException
 {
     use HasExceptionContext;
 

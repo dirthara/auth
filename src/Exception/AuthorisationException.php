@@ -6,7 +6,7 @@ namespace Dirthara\Authorisation\Exception;
 
 use Throwable;
 
-interface AuthException extends Throwable
+interface AuthorisationException extends Throwable
 {
     /**
      * @var array<string, mixed>

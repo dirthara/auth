@@ -27,7 +27,7 @@ types in every PHP file.
 
 ## Exceptions
 Read and follow https://github.com/dirthara/coding-standards/blob/main/docs/coding-standards/cs-7-exceptions-error-handling.md when creating or modifying exceptions.
-Every exception implements `Dirthara\Authorisation\Exception\AuthException` and uses the 
+Every exception implements `Dirthara\Authorisation\Exception\AuthorisationException` and uses the 
 `HasExceptionContext` trait for its context.
 
 ## Documentation

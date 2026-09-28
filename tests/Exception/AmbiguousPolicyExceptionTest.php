@@ -12,8 +12,8 @@ use PHPUnit\Framework\Attributes\Test;
 use Dirthara\Authorisation\AuthorisationResult;
 use Dirthara\Authorisation\AuthorisationContext;
 use Dirthara\Authorisation\Tests\Fixtures\Ability;
-use Dirthara\Authorisation\Exception\AuthException;
 use Dirthara\Authorisation\Tests\Fixtures\FixedPolicy;
+use Dirthara\Authorisation\Exception\AuthorisationException;
 use Dirthara\Authorisation\Exception\AmbiguousPolicyException;
 
 final class AmbiguousPolicyExceptionTest extends TestCase
@@ -23,7 +23,7 @@ final class AmbiguousPolicyExceptionTest extends TestCase
     {
         $exception = self::exceptionFor(new AuthorisationContext(new stdClass(), 'edit'));
 
-        self::assertInstanceOf(AuthException::class, $exception);
+        self::assertInstanceOf(AuthorisationException::class, $exception);
         self::assertInstanceOf(RuntimeException::class, $exception);
         self::assertSame(
             'The authorisation of "edit" is ambiguous: both '

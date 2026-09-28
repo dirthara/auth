@@ -6,7 +6,7 @@ namespace Dirthara\Authorisation\Tests\Exception;
 
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
-use Dirthara\Authorisation\Exception\AuthException;
+use Dirthara\Authorisation\Exception\AuthorisationException;
 use Dirthara\Authorisation\Tests\Fixtures\ContextualException;
 
 final class HasExceptionContextTest extends TestCase
@@ -16,7 +16,7 @@ final class HasExceptionContextTest extends TestCase
     {
         $exception = new ContextualException();
 
-        self::assertInstanceOf(AuthException::class, $exception);
+        self::assertInstanceOf(AuthorisationException::class, $exception);
         self::assertSame([], $exception->context);
     }
 
