@@ -4,14 +4,22 @@ declare(strict_types=1);
 
 namespace Dirthara\Auth\Exception;
 
+use UnitEnum;
 use Throwable;
-use LogicException;
+use RuntimeException;
+use Dirthara\Auth\Contract\Policy;
 use Dirthara\Auth\AuthorisationContext;
 
-final class AmbiguousPolicyException extends LogicException implements AuthException
+use function sprintf;
+use function get_debug_type;
+
+final class AmbiguousPolicyException extends RuntimeException implements AuthException
 {
     use HasExceptionContext;
 
+    /**
+     * @param array<string, mixed> $context
+     */
     public function __construct(string $message = '', int $code = 0, ?Throwable $previous = null, array $context = [])
     {
         parent::__construct($message, $code, $previous);
@@ -19,10 +27,25 @@ final class AmbiguousPolicyException extends LogicException implements AuthExcep
         $this->context = $context;
     }
 
-    public static function forContext(AuthorisationContext $context): self
+    public static function forContext(AuthorisationContext $context, Policy $first, Policy $second): self
     {
-        return new self(message: 'The authorisation is ambiguous, there are multiple policies applicable for this context.', context: [
-            'context' => $context,
-        ]);
+        $ability = $context->ability instanceof UnitEnum
+            ? $context->ability::class . '::' . $context->ability->name
+            : self::printable($context->ability);
+
+        return new self(
+            message: sprintf(
+                'The authorisation of "%s" is ambiguous: both %s and %s apply to it.',
+                $ability,
+                $first::class,
+                $second::class,
+            ),
+            context: [
+                'ability' => $context->ability,
+                'actorType' => get_debug_type($context->actor),
+                'subjectType' => get_debug_type($context->subject),
+                'policies' => [$first::class, $second::class],
+            ],
+        );
     }
 }

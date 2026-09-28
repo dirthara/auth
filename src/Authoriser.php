@@ -7,6 +7,8 @@ namespace Dirthara\Auth;
 use Dirthara\Auth\Contract\Policy;
 use Dirthara\Auth\Exception\AmbiguousPolicyException;
 
+use function iterator_to_array;
+
 final readonly class Authoriser
 {
     /**
@@ -19,12 +21,13 @@ final readonly class Authoriser
      */
     public function __construct(iterable $policies)
     {
-        $this->policies = [...$policies];
+        $this->policies = iterator_to_array($policies, preserve_keys: false);
     }
 
     public function authorise(AuthorisationContext $context): AuthorisationResult
     {
         $result = null;
+        $decidedBy = null;
 
         foreach ($this->policies as $policy) {
             $policyResult = $policy->authorise($context);
@@ -33,11 +36,12 @@ final readonly class Authoriser
                 continue;
             }
 
-            if ($result !== null) {
-                throw AmbiguousPolicyException::forContext($context);
+            if ($decidedBy !== null) {
+                throw AmbiguousPolicyException::forContext($context, $decidedBy, $policy);
             }
 
             $result = $policyResult;
+            $decidedBy = $policy;
         }
 
         return $result ?? AuthorisationResult::notApplicable();
