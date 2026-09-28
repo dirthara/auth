@@ -10,6 +10,7 @@ use Dirthara\Authorisation\AuthorisationDenial;
 use Dirthara\Authorisation\AuthorisationResult;
 use Dirthara\Authorisation\AuthorisationStatus;
 use Dirthara\Authorisation\Tests\Fixtures\FixedPolicy;
+use Dirthara\Authorisation\Exception\NotApplicableResultException;
 
 final class AuthorisationResultTest extends TestCase
 {
@@ -50,6 +51,14 @@ final class AuthorisationResultTest extends TestCase
         self::assertFalse($result->isAllowed());
         self::assertFalse($result->isDenied());
         self::assertTrue($result->isNotApplicable());
+    }
+
+    #[Test]
+    public function it_refuses_to_attach_a_policy_to_a_result_that_does_not_apply(): void
+    {
+        $this->expectException(NotApplicableResultException::class);
+
+        AuthorisationResult::notApplicable()->withPolicy(new FixedPolicy(AuthorisationResult::allowed()));
     }
 
     #[Test]

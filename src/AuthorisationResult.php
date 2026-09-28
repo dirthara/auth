@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Dirthara\Authorisation;
 
 use Dirthara\Authorisation\Contract\Policy;
+use Dirthara\Authorisation\Exception\NotApplicableResultException;
 
 final readonly class AuthorisationResult
 {
@@ -31,6 +32,10 @@ final readonly class AuthorisationResult
 
     public function withPolicy(Policy $policy): self
     {
+        if ($this->isNotApplicable()) {
+            throw NotApplicableResultException::cannotHavePolicy($policy);
+        }
+
         return new self(status: $this->status, policy: $policy, denial: $this->denial);
     }
 

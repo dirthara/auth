@@ -77,6 +77,9 @@ and leaves the original unchanged:
 $result = AuthorisationResult::denied()->withPolicy($articlePolicy);
 ```
 
+Only an `Allowed` or `Denied` result can have a deciding policy. Calling `withPolicy()` on a `NotApplicable` result
+throws `NotApplicableResultException`, because no policy decided it.
+
 :::caution
 `Authoriser` asks every policy, even after one has decided. When more than one policy returns anything other than
 `NotApplicable`, it throws `AmbiguousPolicyException` instead of returning a result, even when those policies agree.
