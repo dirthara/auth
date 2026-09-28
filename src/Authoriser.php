@@ -44,6 +44,10 @@ final readonly class Authoriser
             $decidedBy = $policy;
         }
 
-        return $result ?? AuthorisationResult::notApplicable();
+        if ($result === null || $decidedBy === null) {
+            return AuthorisationResult::notApplicable();
+        }
+
+        return $result->withPolicy($decidedBy);
     }
 }

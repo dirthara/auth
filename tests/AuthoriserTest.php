@@ -20,11 +20,10 @@ final class AuthoriserTest extends TestCase
     #[Test]
     public function it_does_not_apply_without_policies(): void
     {
-        self::assertTrue(
-            new Authoriser([])
-                ->authorise(self::context())
-                ->isNotApplicable(),
-        );
+        $result = new Authoriser([])->authorise(self::context());
+
+        self::assertTrue($result->isNotApplicable());
+        self::assertNull($result->policy);
     }
 
     #[Test]
@@ -35,24 +34,63 @@ final class AuthoriserTest extends TestCase
             new FixedPolicy(AuthorisationResult::notApplicable()),
         ]);
 
-        self::assertTrue($authoriser->authorise(self::context())->isNotApplicable());
+        $result = $authoriser->authorise(self::context());
+
+        self::assertTrue($result->isNotApplicable());
+        self::assertNull($result->policy);
     }
 
     #[Test]
-    public function it_returns_the_result_of_the_one_policy_that_applies(): void
+    public function it_attaches_the_one_policy_that_allows(): void
+    {
+        $allowing = new FixedPolicy(AuthorisationResult::allowed());
+
+        $result = new Authoriser([$allowing])->authorise(self::context());
+
+        self::assertTrue($result->isAllowed());
+        self::assertSame($allowing, $result->policy);
+    }
+
+    #[Test]
+    public function it_attaches_the_one_policy_that_denies(): void
+    {
+        $denying = new FixedPolicy(AuthorisationResult::denied());
+
+        $result = new Authoriser([$denying])->authorise(self::context());
+
+        self::assertTrue($result->isDenied());
+        self::assertSame($denying, $result->policy);
+    }
+
+    #[Test]
+    public function it_attaches_the_applicable_policy_between_policies_that_do_not_apply(): void
+    {
+        $before = new FixedPolicy(AuthorisationResult::notApplicable());
+        $allowing = new FixedPolicy(AuthorisationResult::allowed());
+        $after = new FixedPolicy(AuthorisationResult::notApplicable());
+
+        $result = new Authoriser([$before, $allowing, $after])->authorise(self::context());
+
+        self::assertTrue($result->isAllowed());
+        self::assertSame($allowing, $result->policy);
+        self::assertNotSame($before, $result->policy);
+        self::assertNotSame($after, $result->policy);
+    }
+
+    #[Test]
+    public function it_does_not_attach_the_policy_to_the_result_the_policy_returns(): void
     {
         $allowed = AuthorisationResult::allowed();
-        $denied = AuthorisationResult::denied();
-        $notApplicable = new FixedPolicy(AuthorisationResult::notApplicable());
+        $policy = new FixedPolicy($allowed);
+        $context = self::context();
 
-        self::assertSame(
-            $allowed,
-            new Authoriser([$notApplicable, new FixedPolicy($allowed), $notApplicable])->authorise(self::context()),
-        );
-        self::assertSame(
-            $denied,
-            new Authoriser([$notApplicable, new FixedPolicy($denied), $notApplicable])->authorise(self::context()),
-        );
+        self::assertNull($policy->authorise($context)->policy);
+
+        $result = new Authoriser([$policy])->authorise($context);
+
+        self::assertSame($policy, $result->policy);
+        self::assertNull($allowed->policy);
+        self::assertNull($policy->authorise($context)->policy);
     }
 
     #[Test]
@@ -84,7 +122,7 @@ final class AuthoriserTest extends TestCase
     }
 
     #[Test]
-    public function it_refuses_to_decide_when_policies_that_apply_agree(): void
+    public function it_refuses_to_decide_when_policies_that_allow_agree(): void
     {
         $authoriser = new Authoriser([
             new FixedPolicy(AuthorisationResult::allowed()),
@@ -97,12 +135,28 @@ final class AuthoriserTest extends TestCase
     }
 
     #[Test]
+    public function it_refuses_to_decide_when_policies_that_deny_agree(): void
+    {
+        $authoriser = new Authoriser([
+            new FixedPolicy(AuthorisationResult::denied()),
+            new FixedPolicy(AuthorisationResult::denied()),
+        ]);
+
+        $this->expectException(AmbiguousPolicyException::class);
+
+        $authoriser->authorise(self::context());
+    }
+
+    #[Test]
     public function it_takes_the_policies_from_a_generator(): void
     {
-        $allowed = AuthorisationResult::allowed();
-        $policies = self::generate(new FixedPolicy(AuthorisationResult::notApplicable()), new FixedPolicy($allowed));
+        $allowing = new FixedPolicy(AuthorisationResult::allowed());
+        $policies = self::generate(new FixedPolicy(AuthorisationResult::notApplicable()), $allowing);
 
-        self::assertSame($allowed, new Authoriser($policies)->authorise(self::context()));
+        $result = new Authoriser($policies)->authorise(self::context());
+
+        self::assertTrue($result->isAllowed());
+        self::assertSame($allowing, $result->policy);
     }
 
     #[Test]

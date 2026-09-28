@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Dirthara\Auth;
 
+use Dirthara\Auth\Contract\Policy;
+
 final readonly class AuthorisationResult
 {
     private function __construct(
         public AuthorisationStatus $status,
+        public ?Policy $policy = null,
     ) {}
 
     public static function allowed(): self
@@ -23,6 +26,11 @@ final readonly class AuthorisationResult
     public static function notApplicable(): self
     {
         return new self(AuthorisationStatus::NotApplicable);
+    }
+
+    public function withPolicy(Policy $policy): self
+    {
+        return new self(status: $this->status, policy: $policy);
     }
 
     public function isAllowed(): bool

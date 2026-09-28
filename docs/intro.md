@@ -8,8 +8,8 @@ description: Status and scope of the Dirthara Auth package.
 Authorisation for the Dirthara framework.
 
 :::note
-The package is an initial scaffold. There is no public API or published
-release yet. API documentation will accompany its implementation.
+There is no published release yet, and the API may change before one.
 :::
 
-See [installation](installation.md) for requirements and development setup.
+- [Installation](installation.md) covers requirements and development setup.
+- [Authorisation results](results.md) describes what an authorisation returns and how it records the deciding policy.
