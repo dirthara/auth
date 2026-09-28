@@ -98,6 +98,7 @@ final class AuthorisationDeniedExceptionTest extends TestCase
                 'status' => AuthorisationStatus::Denied,
                 'policy' => FixedPolicy::class,
                 'messageKey' => '{actor} cannot modify this resource.',
+                'consulted' => [],
             ],
             $exception->context,
         );
@@ -114,5 +115,21 @@ final class AuthorisationDeniedExceptionTest extends TestCase
         self::assertNull($exception->context['messageKey']);
         self::assertSame(AuthorisationStatus::NotApplicable, $exception->context['status']);
         self::assertSame('null', $exception->context['subjectType']);
+    }
+
+    #[Test]
+    public function it_records_the_consulted_policies_by_type(): void
+    {
+        $result = AuthorisationResult::notApplicable()->withConsulted(
+            new FixedPolicy(AuthorisationResult::notApplicable()),
+            new FixedPolicy(AuthorisationResult::notApplicable()),
+        );
+
+        $exception = AuthorisationDeniedException::noPolicyApplies(
+            new AuthorisationContext(new stdClass(), 'edit'),
+            $result,
+        );
+
+        self::assertSame([FixedPolicy::class, FixedPolicy::class], $exception->context['consulted']);
     }
 }

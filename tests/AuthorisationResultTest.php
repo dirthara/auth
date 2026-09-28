@@ -143,4 +143,62 @@ final class AuthorisationResultTest extends TestCase
         self::assertTrue($result->isDenied());
         self::assertNull($result->denial);
     }
+
+    #[Test]
+    public function it_has_consulted_no_policies_by_default(): void
+    {
+        self::assertSame([], AuthorisationResult::allowed()->consulted);
+        self::assertSame([], AuthorisationResult::denied()->consulted);
+        self::assertSame([], AuthorisationResult::notApplicable()->consulted);
+    }
+
+    #[Test]
+    public function it_records_the_consulted_policies_as_a_new_result(): void
+    {
+        $denial = new AuthorisationDenial('You can only edit posts you own.');
+        $deciding = new FixedPolicy(AuthorisationResult::denied($denial));
+        $other = new FixedPolicy(AuthorisationResult::notApplicable());
+        $result = AuthorisationResult::denied($denial)->withPolicy($deciding);
+
+        $consulted = $result->withConsulted($other, $deciding);
+
+        self::assertNotSame($result, $consulted);
+        self::assertSame([], $result->consulted);
+        self::assertSame([$other, $deciding], $consulted->consulted);
+        self::assertSame(AuthorisationStatus::Denied, $consulted->status);
+        self::assertSame($deciding, $consulted->policy);
+        self::assertSame($denial, $consulted->denial);
+    }
+
+    #[Test]
+    public function it_records_the_consulted_policies_of_a_result_that_does_not_apply(): void
+    {
+        $policy = new FixedPolicy(AuthorisationResult::notApplicable());
+
+        $result = AuthorisationResult::notApplicable()->withConsulted($policy);
+
+        self::assertTrue($result->isNotApplicable());
+        self::assertNull($result->policy);
+        self::assertSame([$policy], $result->consulted);
+    }
+
+    #[Test]
+    public function it_keeps_the_consulted_policies_when_a_policy_is_attached(): void
+    {
+        $policy = new FixedPolicy(AuthorisationResult::allowed());
+
+        $result = AuthorisationResult::allowed()->withConsulted($policy)->withPolicy($policy);
+
+        self::assertSame([$policy], $result->consulted);
+    }
+
+    #[Test]
+    public function it_records_consulted_policies_as_a_list(): void
+    {
+        $policy = new FixedPolicy(AuthorisationResult::allowed());
+
+        $result = AuthorisationResult::allowed()->withConsulted(...['first' => $policy]);
+
+        self::assertSame([$policy], $result->consulted);
+    }
 }

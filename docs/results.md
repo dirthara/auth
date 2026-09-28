@@ -16,18 +16,20 @@ AuthorisationResult::denied();
 AuthorisationResult::notApplicable();
 ```
 
-A result has three public properties:
+A result has four public properties:
 
-| Property  | Type                   | Meaning                                                                      |
-|-----------|------------------------|------------------------------------------------------------------------------|
-| `status`  | `AuthorisationStatus`  | `Allowed`, `Denied`, or `NotApplicable`.                                     |
-| `policy`  | `?Policy`              | The policy `Authoriser` resolved as responsible for the decision, or `null`. |
-| `denial`  | `?AuthorisationDenial` | Why a denied result was denied, when the policy said so, or `null`.          |
+| Property    | Type                   | Meaning                                                                      |
+|-------------|------------------------|------------------------------------------------------------------------------|
+| `status`    | `AuthorisationStatus`  | `Allowed`, `Denied`, or `NotApplicable`.                                     |
+| `policy`    | `?Policy`              | The policy `Authoriser` resolved as responsible for the decision, or `null`. |
+| `denial`    | `?AuthorisationDenial` | Why a denied result was denied, when the policy said so, or `null`.          |
+| `consulted` | `list<Policy>`         | Every policy `Authoriser` asked, in order, or an empty list.                 |
 
 ```php
 $result->status;
 $result->policy;
 $result->denial;
+$result->consulted;
 ```
 
 `isAllowed()`, `isDenied()`, and `isNotApplicable()` check the status. A denied authorisation is a normal result, not an
@@ -84,6 +86,28 @@ throws `NotApplicableResultException`, because no policy decided it.
 `Authoriser` asks every policy, even after one has decided. When more than one policy returns anything other than
 `NotApplicable`, it throws `AmbiguousPolicyException` instead of returning a result, even when those policies agree.
 :::
+
+## Consulted policies
+
+`consulted` records every policy `Authoriser` asked for a result, in the order it asked them. It answers the question a
+`NotApplicable` result leaves open: which policies were there, none of which applied?
+
+```php
+$result = $authoriser->authorise(new AuthorisationContext($user, 'publish', $article));
+
+$result->isNotApplicable();   // true
+$result->consulted;           // [$articlePolicy, $commentPolicy]
+```
+
+An empty list on a result from `Authoriser` means it had no policies to ask. A result returned directly by a policy has
+an empty list, like its `null` policy.
+
+`withConsulted()` returns a new result with the given policies and the same status, policy, and denial, for any result
+status. `withPolicy()` keeps the consulted policies of the result it is called on.
+
+```php
+$result = AuthorisationResult::notApplicable()->withConsulted($articlePolicy, $commentPolicy);
+```
 
 ## Denials
 

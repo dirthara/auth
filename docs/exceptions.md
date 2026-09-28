@@ -73,3 +73,4 @@ The `result` property holds the result that was not allowed, with its status, de
 | `status`      | `AuthorisationStatus` | `Denied` or `NotApplicable`.                                         |
 | `policy`      | `?string`             | The type of the policy that denied, or `null` when there is none.    |
 | `messageKey`  | `?string`             | The denial's message key without its parameters, or `null`.          |
+| `consulted`   | `list<string>`        | The types of the policies the authoriser asked, in order.            |

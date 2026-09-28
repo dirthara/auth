@@ -46,9 +46,9 @@ final readonly class Authoriser implements AuthoriserContract
         }
 
         if ($result === null || $decidedBy === null) {
-            return AuthorisationResult::notApplicable();
+            return AuthorisationResult::notApplicable()->withConsulted(...$this->policies);
         }
 
-        return $result->withPolicy($decidedBy);
+        return $result->withPolicy($decidedBy)->withConsulted(...$this->policies);
     }
 }

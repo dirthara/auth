@@ -10,6 +10,7 @@ use Dirthara\Authorisation\AuthorisationResult;
 use Dirthara\Authorisation\AuthorisationContext;
 
 use function sprintf;
+use function array_map;
 use function get_debug_type;
 
 final class AuthorisationDeniedException extends RuntimeException implements AuthorisationException
@@ -70,6 +71,7 @@ final class AuthorisationDeniedException extends RuntimeException implements Aut
             'status' => $result->status,
             'policy' => $result->policy === null ? null : get_debug_type($result->policy),
             'messageKey' => $result->denial?->messageKey,
+            'consulted' => array_map(get_debug_type(...), $result->consulted),
         ];
     }
 }

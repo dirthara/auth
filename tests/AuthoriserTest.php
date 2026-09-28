@@ -212,6 +212,36 @@ final class AuthoriserTest extends TestCase
         new Authoriser($policies)->authorise(self::context());
     }
 
+    #[Test]
+    public function it_records_every_policy_it_consulted_when_none_applies(): void
+    {
+        $first = new FixedPolicy(AuthorisationResult::notApplicable());
+        $second = new FixedPolicy(AuthorisationResult::notApplicable());
+
+        $result = new Authoriser([$first, $second])->authorise(self::context());
+
+        self::assertSame([$first, $second], $result->consulted);
+    }
+
+    #[Test]
+    public function it_records_every_policy_it_consulted_when_one_decides(): void
+    {
+        $before = new FixedPolicy(AuthorisationResult::notApplicable());
+        $deciding = new FixedPolicy(AuthorisationResult::allowed());
+        $after = new FixedPolicy(AuthorisationResult::notApplicable());
+
+        $result = new Authoriser([$before, $deciding, $after])->authorise(self::context());
+
+        self::assertSame([$before, $deciding, $after], $result->consulted);
+        self::assertSame($deciding, $result->policy);
+    }
+
+    #[Test]
+    public function it_records_no_consulted_policies_without_policies(): void
+    {
+        self::assertSame([], new Authoriser([])->authorise(self::context())->consulted);
+    }
+
     private static function context(): AuthorisationContext
     {
         return new AuthorisationContext(new stdClass(), 'edit', new stdClass());

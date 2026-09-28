@@ -7,12 +7,18 @@ namespace Dirthara\Authorisation;
 use Dirthara\Authorisation\Contract\Policy;
 use Dirthara\Authorisation\Exception\NotApplicableResultException;
 
+use function array_values;
+
 final readonly class AuthorisationResult
 {
+    /**
+     * @param list<Policy> $consulted
+     */
     private function __construct(
         public AuthorisationStatus $status,
         public ?Policy $policy = null,
         public ?AuthorisationDenial $denial = null,
+        public array $consulted = [],
     ) {}
 
     public static function allowed(): self
@@ -36,7 +42,17 @@ final readonly class AuthorisationResult
             throw NotApplicableResultException::cannotHavePolicy($policy);
         }
 
-        return new self(status: $this->status, policy: $policy, denial: $this->denial);
+        return new self(status: $this->status, policy: $policy, denial: $this->denial, consulted: $this->consulted);
+    }
+
+    public function withConsulted(Policy ...$policies): self
+    {
+        return new self(
+            status: $this->status,
+            policy: $this->policy,
+            denial: $this->denial,
+            consulted: array_values($policies),
+        );
     }
 
     public function isAllowed(): bool
