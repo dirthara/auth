@@ -6,6 +6,7 @@ namespace Dirthara\Authorisation\Tests;
 
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
+use Dirthara\Authorisation\PolicyDecision;
 use Dirthara\Authorisation\AuthorisationDenial;
 use Dirthara\Authorisation\AuthorisationResult;
 use Dirthara\Authorisation\AuthorisationStatus;
@@ -200,5 +201,65 @@ final class AuthorisationResultTest extends TestCase
         $result = AuthorisationResult::allowed()->withConsulted(...['first' => $policy]);
 
         self::assertSame([$policy], $result->consulted);
+    }
+
+    #[Test]
+    public function it_has_no_decisions_by_default(): void
+    {
+        self::assertSame([], AuthorisationResult::allowed()->decisions);
+        self::assertSame([], AuthorisationResult::denied()->decisions);
+        self::assertSame([], AuthorisationResult::notApplicable()->decisions);
+    }
+
+    #[Test]
+    public function it_records_decisions_as_a_new_result(): void
+    {
+        $denial = new AuthorisationDenial('You do not own this resource.');
+        $deciding = new FixedPolicy(AuthorisationResult::denied($denial));
+        $allowing = PolicyDecision::allowed(new FixedPolicy(AuthorisationResult::allowed()));
+        $denying = PolicyDecision::denied($deciding, $denial);
+        $result = AuthorisationResult::denied($denial)->withPolicy($deciding)->withConsulted($deciding);
+
+        $decided = $result->withDecisions($allowing, $denying);
+
+        self::assertNotSame($result, $decided);
+        self::assertSame([], $result->decisions);
+        self::assertSame([$allowing, $denying], $decided->decisions);
+        self::assertSame(AuthorisationStatus::Denied, $decided->status);
+        self::assertSame($deciding, $decided->policy);
+        self::assertSame($denial, $decided->denial);
+        self::assertSame([$deciding], $decided->consulted);
+    }
+
+    #[Test]
+    public function it_records_decisions_of_a_result_that_does_not_apply(): void
+    {
+        $decision = PolicyDecision::denied(new FixedPolicy(AuthorisationResult::denied()));
+
+        $result = AuthorisationResult::notApplicable()->withDecisions($decision);
+
+        self::assertTrue($result->isNotApplicable());
+        self::assertSame([$decision], $result->decisions);
+    }
+
+    #[Test]
+    public function it_keeps_the_decisions_when_a_policy_is_attached_or_consulted_policies_are_recorded(): void
+    {
+        $policy = new FixedPolicy(AuthorisationResult::allowed());
+        $decision = PolicyDecision::allowed($policy);
+
+        $result = AuthorisationResult::allowed()->withDecisions($decision)->withPolicy($policy)->withConsulted($policy);
+
+        self::assertSame([$decision], $result->decisions);
+    }
+
+    #[Test]
+    public function it_records_decisions_as_a_list(): void
+    {
+        $decision = PolicyDecision::allowed(new FixedPolicy(AuthorisationResult::allowed()));
+
+        $result = AuthorisationResult::allowed()->withDecisions(...['first' => $decision]);
+
+        self::assertSame([$decision], $result->decisions);
     }
 }

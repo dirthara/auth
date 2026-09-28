@@ -60,9 +60,9 @@ A `NotApplicable` result means no policy decided, so it cannot carry a deciding 
 
 ## AuthorisationDeniedException
 
-The message names the ability, written the same way as in `AmbiguousPolicyException`, and the policy that denied, or
-says that no policy applies. It never contains the denial message, because that can name the actor or describe the
-subject.
+The message names the ability, written the same way as in `AmbiguousPolicyException`, and the deciding policy when the
+result has one, or says that no policy applies. It never contains a denial message, because that can name the actor or
+describe the subject.
 
 The `result` property holds the result that was not allowed, with its status, deciding policy, and denial.
 
@@ -72,6 +72,6 @@ The `result` property holds the result that was not allowed, with its status, de
 | `actorType`   | `string`              | The type of the actor, such as its class name.                       |
 | `subjectType` | `string`              | The type of the subject, or the string `null` without one.           |
 | `status`      | `AuthorisationStatus` | `Denied` or `NotApplicable`.                                         |
-| `policy`      | `?string`             | The type of the policy that denied, or `null` when there is none.    |
+| `policy`      | `?string`             | The type of the deciding policy, or `null` for a collective result.  |
 | `messageKey`  | `?string`             | The denial's message key without its parameters, or `null`.          |
 | `consulted`   | `list<string>`        | The types of the policies the authoriser asked, in order.            |

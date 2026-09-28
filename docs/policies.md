@@ -99,27 +99,27 @@ The authoriser always asks every policy, even when the outcome is already certai
 a policy with side effects runs on every authorisation. `OnlyOne` is the exception: it stops at the second policy that
 applies and throws.
 
-The result carries the first policy, in order, whose answer matches the outcome, along with that policy's denial:
+Every result records the decision of each policy that applied in `decisions`, and every policy asked in `consulted`.
+`policy` names a single policy only when that policy's decision alone determined the result:
 
-| `DecisionStrategy` | `policy` of an `Allowed` result | `policy` and `denial` of a `Denied` result |
-|--------------------|---------------------------------|--------------------------------------------|
-| `OnlyOne`          | The policy that allowed.        | The policy that denied.                    |
-| `AtLeastOne`       | The first policy that allowed.  | The first policy that denied.              |
-| `All`              | The first policy that allowed.  | The first policy that denied.              |
-
-Order never changes the status of the result, only which of several agreeing policies it names under `AtLeastOne`
-and `All`.
-
-:::caution
-A `NotApplicable` result means no policy is responsible for the question, not that the actor is allowed. Treat it as a
-denial unless your application deliberately allows what no policy covers:
+| `DecisionStrategy` | `policy` of an `Allowed` result | `policy` of a `Denied` result |
+|--------------------|---------------------------------|-------------------------------|
+| `OnlyOne`          | The policy that applied.        | The policy that applied.      |
+| `AtLeastOne`       | The first policy that allowed.  | `null`, a collective denial.  |
+| `All`              | `null`, a collective allow.     | The first policy that denied. |
 
 ```php
-if (!$authoriser->authorise($context)->isAllowed()) {
-    // deny
-}
+$authoriser = new Authoriser([$ownershipPolicy, $subscriptionPolicy], DecisionStrategy::All);
+
+$result = $authoriser->authorise(new AuthorisationContext($user, 'publish', $article));
+
+$result->isDenied();    // true, because $subscriptionPolicy denied
+$result->policy;        // $subscriptionPolicy
+$result->decisions;     // [allowed by $ownershipPolicy, denied by $subscriptionPolicy]
 ```
-:::
+
+Order never changes the status of a result, only which of several agreeing policies `policy` names. See
+[the deciding policy](results.md#the-deciding-policy) for how `policy`, `denial`, and `decisions` relate.
 
 ## Enforcing a decision
 

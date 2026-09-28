@@ -43,9 +43,23 @@ $authoriser = new FakeAuthoriser(
 `contexts` lists every context in the order it was asked, starting empty.
 
 :::note
-The fake returns its result exactly as given and attaches no policy, so `policy` is `null` unless the result you give it
-already has one. Unlike `Authoriser`, it never throws `AmbiguousPolicyException`.
+The fake returns its result exactly as given. It attaches no policy, consulted policies, or decisions, so those stay as
+the result you give it has them, which for a result from a factory is `null` and empty lists. Build them with
+`withPolicy()`, `withDecisions()`, and `withConsulted()` when the code under test reads them. Unlike `Authoriser`, it
+never throws `AmbiguousPolicyException`.
 :::
+
+```php
+use Dirthara\Authorisation\PolicyDecision;
+use Dirthara\Authorisation\AuthorisationDenial;
+
+$authoriser = new FakeAuthoriser(
+    AuthorisationResult::denied()->withDecisions(
+        PolicyDecision::denied($ownershipPolicy, new AuthorisationDenial('You do not own this resource.')),
+        PolicyDecision::denied($subscriptionPolicy, new AuthorisationDenial('Your plan does not permit this.')),
+    ),
+);
+```
 
 The fake works with `Enforcer` too, so the code under test can enforce decisions as it does in production:
 

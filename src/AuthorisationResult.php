@@ -13,12 +13,14 @@ final readonly class AuthorisationResult
 {
     /**
      * @param list<Policy> $consulted
+     * @param list<PolicyDecision> $decisions
      */
     private function __construct(
         public AuthorisationStatus $status,
         public ?Policy $policy = null,
         public ?AuthorisationDenial $denial = null,
         public array $consulted = [],
+        public array $decisions = [],
     ) {}
 
     public static function allowed(): self
@@ -42,7 +44,13 @@ final readonly class AuthorisationResult
             throw NotApplicableResultException::cannotHavePolicy($policy);
         }
 
-        return new self(status: $this->status, policy: $policy, denial: $this->denial, consulted: $this->consulted);
+        return new self(
+            status: $this->status,
+            policy: $policy,
+            denial: $this->denial,
+            consulted: $this->consulted,
+            decisions: $this->decisions,
+        );
     }
 
     public function withConsulted(Policy ...$policies): self
@@ -52,6 +60,18 @@ final readonly class AuthorisationResult
             policy: $this->policy,
             denial: $this->denial,
             consulted: array_values($policies),
+            decisions: $this->decisions,
+        );
+    }
+
+    public function withDecisions(PolicyDecision ...$decisions): self
+    {
+        return new self(
+            status: $this->status,
+            policy: $this->policy,
+            denial: $this->denial,
+            consulted: $this->consulted,
+            decisions: array_values($decisions),
         );
     }
 

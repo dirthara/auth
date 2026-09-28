@@ -2,7 +2,7 @@
 id: results
 title: Authorisation results
 sidebar_position: 4
-description: What an authorisation returns, the policy that made the decision, and why a result was denied.
+description: What an authorisation returns, which policies decided it, and why a result was denied.
 ---
 
 Every authorisation returns an immutable `AuthorisationResult`. A policy creates one with a named factory, and
@@ -16,31 +16,81 @@ AuthorisationResult::denied();
 AuthorisationResult::notApplicable();
 ```
 
-A result has four public properties:
+A result has five public properties:
 
-| Property    | Type                   | Meaning                                                                      |
-|-------------|------------------------|------------------------------------------------------------------------------|
-| `status`    | `AuthorisationStatus`  | `Allowed`, `Denied`, or `NotApplicable`.                                     |
-| `policy`    | `?Policy`              | The policy `Authoriser` resolved as responsible for the decision, or `null`. |
-| `denial`    | `?AuthorisationDenial` | Why a denied result was denied, when the policy said so, or `null`.          |
-| `consulted` | `list<Policy>`         | Every policy `Authoriser` asked, in order, or an empty list.                 |
+| Property    | Type                   | Meaning                                                                        |
+|-------------|------------------------|--------------------------------------------------------------------------------|
+| `status`    | `AuthorisationStatus`  | `Allowed`, `Denied`, or `NotApplicable`.                                       |
+| `policy`    | `?Policy`              | The policy whose decision alone determined the result, or `null`.              |
+| `denial`    | `?AuthorisationDenial` | The denial of that policy, when it denied and gave a reason, or `null`.        |
+| `consulted` | `list<Policy>`         | Every policy `Authoriser` asked, in order, or an empty list.                   |
+| `decisions` | `list<PolicyDecision>` | The decision of every policy that applied, in order, or an empty list.         |
 
 ```php
 $result->status;
 $result->policy;
 $result->denial;
 $result->consulted;
+$result->decisions;
 ```
 
 `isAllowed()`, `isDenied()`, and `isNotApplicable()` check the status. A denied authorisation is a normal result, not an
 exception.
 
-## Policy provenance
+The three provenance properties answer different questions:
 
-`policy` records which policy owns a decision. A `null` policy means no provenance has been attached to the result.
+| Property    | Answers                                                                  |
+|-------------|--------------------------------------------------------------------------|
+| `consulted` | Which policies were asked?                                               |
+| `decisions` | Which policies applied, and what did each of them decide?                |
+| `policy`    | Which one policy's decision was enough on its own to reach this result?  |
 
-`Authoriser` attaches the provenance. The result it returns carries the exact policy instance that decided, so two
-instances of the same policy class remain distinguishable:
+## Policy decisions
+
+A `PolicyDecision` records what one policy that applied decided. `Authoriser` creates one for every policy that did not
+return `NotApplicable`, in the order it asked them:
+
+| Property | Type                   | Meaning                                                      |
+|----------|------------------------|--------------------------------------------------------------|
+| `policy` | `Policy`               | The exact policy instance that decided.                      |
+| `status` | `AuthorisationStatus`  | `Allowed` or `Denied`, never `NotApplicable`.                |
+| `denial` | `?AuthorisationDenial` | The denial that policy returned, or `null`.                  |
+
+`isAllowed()` and `isDenied()` check the status. A decision is created with `PolicyDecision::allowed($policy)` or
+`PolicyDecision::denied($policy, $denial)`, so it cannot be `NotApplicable` or carry a denial when it allowed.
+
+```php
+use Dirthara\Authorisation\AuthorisationContext;
+
+$result = $authoriser->authorise(new AuthorisationContext($user, 'publish', $article));
+
+foreach ($result->decisions as $decision) {
+    $decision->policy;             // $ownershipPolicy, then $subscriptionPolicy
+    $decision->denial?->message;   // each policy's own reason
+}
+```
+
+Every denying policy keeps its own denial here, including when several policies denied together. The package never
+merges denials or picks one as the explanation for a collective result.
+
+## The deciding policy
+
+`policy` names the policy whose decision alone was enough to determine the result under the authoriser's
+[decision strategy](policies.md#decision-strategies). Some results are collective instead: under `AtLeastOne` a denial
+needs every policy that applied to deny, and under `All` an allow needs every policy that applied to allow. No single
+policy decided those, so `policy` is `null` and `decisions` explains the result.
+
+| `DecisionStrategy` | `policy` of an `Allowed` result | `policy` of a `Denied` result |
+|--------------------|---------------------------------|-------------------------------|
+| `OnlyOne`          | The policy that applied.        | The policy that applied.      |
+| `AtLeastOne`       | The first policy that allowed.  | `null`, a collective denial.  |
+| `All`              | `null`, a collective allow.     | The first policy that denied. |
+
+A `NotApplicable` result never has a policy. The rule holds even when only one policy applied: a single denial under
+`AtLeastOne` is still collective, because it denies only as every policy that applied, so read its reason from
+`decisions`.
+
+The result carries the exact policy instance, so two instances of the same policy class remain distinguishable:
 
 ```php
 use Dirthara\Authorisation\Authoriser;
@@ -54,36 +104,41 @@ $result->status;   // AuthorisationStatus::Allowed
 $result->policy;   // $articlePolicy
 ```
 
+`denial` follows `policy`. It is the denial of the deciding policy when that policy denied, and `null` for an allow, a
+collective denial, or a denial without a reason. To show why a collective denial happened, read the denials from
+`decisions`:
+
+```php
+if ($result->isDenied() && $result->policy === null) {
+    foreach ($result->decisions as $decision) {
+        $decision->denial?->message;
+    }
+}
+```
+
 `Authoriser` implements `Dirthara\Authorisation\Contract\Authoriser`. Code that only needs a decision should depend on
 the contract, so it does not rely on how the decision is reached.
 
-For a result returned by `Authoriser`:
+## Building results yourself
 
-| Status          | `policy`                                                   |
-|-----------------|------------------------------------------------------------|
-| `Allowed`       | The policy that allowed, or the first of several.          |
-| `Denied`        | The policy that denied, or the first of several.           |
-| `NotApplicable` | `null`, because no policy applied.                         |
+A policy does not attach anything to its own result. It returns `AuthorisationResult::allowed()` or another factory as
+usual, and a result returned directly by a policy has a `null` policy and no consulted policies or decisions.
+`Authoriser` replaces all three on the result it returns.
 
-Which policies may agree depends on the authoriser's
-[decision strategy](policies.md#decision-strategies).
+Three methods return a new result and leave the original unchanged. Each keeps every property it does not set:
 
-A policy does not attach itself. It returns `AuthorisationResult::allowed()` or another factory as usual, and a result
-returned directly by a policy normally has a `null` policy:
-
-```php
-$articlePolicy->authorise($context)->policy;   // null
-```
-
-To attach a policy yourself, `withPolicy()` returns a new result with the same status and denial and the given policy,
-and leaves the original unchanged:
+| Method                              | Sets                                                                         |
+|-------------------------------------|------------------------------------------------------------------------------|
+| `withPolicy(Policy $policy)`        | `policy`. Throws `NotApplicableResultException` on a `NotApplicable` result. |
+| `withConsulted(Policy ...)`         | `consulted`, for a result of any status.                                     |
+| `withDecisions(PolicyDecision ...)` | `decisions`, for a result of any status.                                     |
 
 ```php
-$result = AuthorisationResult::denied()->withPolicy($articlePolicy);
+$result = AuthorisationResult::denied($denial)
+    ->withPolicy($articlePolicy)
+    ->withDecisions(PolicyDecision::denied($articlePolicy, $denial))
+    ->withConsulted($articlePolicy, $commentPolicy);
 ```
-
-Only an `Allowed` or `Denied` result can have a deciding policy. Calling `withPolicy()` on a `NotApplicable` result
-throws `NotApplicableResultException`, because no policy decided it.
 
 :::caution
 With the default `OnlyOne` strategy, `Authoriser` throws `AmbiguousPolicyException` instead of returning a result when
@@ -92,25 +147,19 @@ more than one policy returns anything other than `NotApplicable`, even when thos
 
 ## Consulted policies
 
-`consulted` records every policy `Authoriser` asked for a result, in the order it asked them. It answers the question a
-`NotApplicable` result leaves open: which policies were there, none of which applied?
+`consulted` records every policy `Authoriser` asked for a result, in the order it asked them, including the policies
+that returned `NotApplicable`. It answers the question a `NotApplicable` result leaves open: which policies were there,
+none of which applied?
 
 ```php
 $result = $authoriser->authorise(new AuthorisationContext($user, 'publish', $article));
 
 $result->isNotApplicable();   // true
 $result->consulted;           // [$articlePolicy, $commentPolicy]
+$result->decisions;           // []
 ```
 
-An empty list on a result from `Authoriser` means it had no policies to ask. A result returned directly by a policy has
-an empty list, like its `null` policy.
-
-`withConsulted()` returns a new result with the given policies and the same status, policy, and denial, for any result
-status. `withPolicy()` keeps the consulted policies of the result it is called on.
-
-```php
-$result = AuthorisationResult::notApplicable()->withConsulted($articlePolicy, $commentPolicy);
-```
+An empty `consulted` list on a result from `Authoriser` means it had no policies to ask.
 
 ## Denials
 
@@ -138,7 +187,8 @@ return AuthorisationResult::denied(
 
 Only a denied result can carry a denial. `denial` is always `null` for `Allowed` and `NotApplicable`, and for a denied
 result whose policy gave no reason. The denial belongs to that one decision, so a policy can deny for different reasons
-in different situations. `Authoriser` keeps the denial when it attaches the deciding policy.
+in different situations. The denial of every policy that denied stays on its `PolicyDecision`; the result's own
+`denial` is set only when one policy decided the result.
 
 Every `AuthorisationDenial` carries:
 

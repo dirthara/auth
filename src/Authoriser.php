@@ -29,7 +29,7 @@ final readonly class Authoriser implements AuthoriserContract
 
     public function authorise(AuthorisationContext $context): AuthorisationResult
     {
-        $applicable = null;
+        $decisions = [];
         $allowed = null;
         $denied = null;
 
@@ -40,24 +40,29 @@ final readonly class Authoriser implements AuthoriserContract
                 continue;
             }
 
-            if ($applicable !== null && $this->strategy === DecisionStrategy::OnlyOne) {
-                throw AmbiguousPolicyException::forContext($context, $applicable, $policy);
+            if ($decisions !== [] && $this->strategy === DecisionStrategy::OnlyOne) {
+                throw AmbiguousPolicyException::forContext($context, $decisions[0]->policy, $policy);
             }
-
-            $applicable ??= $policy;
 
             if ($policyResult->isAllowed()) {
+                $decisions[] = PolicyDecision::allowed($policy);
                 $allowed ??= $policyResult->withPolicy($policy);
-            } else {
-                $denied ??= $policyResult->withPolicy($policy);
+
+                continue;
             }
+
+            $decisions[] = PolicyDecision::denied($policy, $policyResult->denial);
+            $denied ??= $policyResult->withPolicy($policy);
         }
 
         $result = match ($this->strategy) {
-            DecisionStrategy::OnlyOne, DecisionStrategy::AtLeastOne => $allowed ?? $denied,
-            DecisionStrategy::All => $denied ?? $allowed,
+            DecisionStrategy::OnlyOne => $allowed ?? $denied,
+            DecisionStrategy::AtLeastOne => $allowed ?? ($denied === null ? null : AuthorisationResult::denied()),
+            DecisionStrategy::All => $denied ?? ($allowed === null ? null : AuthorisationResult::allowed()),
         };
 
-        return ($result ?? AuthorisationResult::notApplicable())->withConsulted(...$this->policies);
+        return ($result ?? AuthorisationResult::notApplicable())
+            ->withDecisions(...$decisions)
+            ->withConsulted(...$this->policies);
     }
 }

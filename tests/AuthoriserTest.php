@@ -9,6 +9,7 @@ use Generator;
 use PHPUnit\Framework\TestCase;
 use Dirthara\Authorisation\Authoriser;
 use PHPUnit\Framework\Attributes\Test;
+use Dirthara\Authorisation\PolicyDecision;
 use Dirthara\Authorisation\Contract\Policy;
 use Dirthara\Authorisation\DecisionStrategy;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -247,10 +248,7 @@ final class AuthoriserTest extends TestCase
     #[Test]
     public function it_decides_with_only_one_policy_by_default(): void
     {
-        $authoriser = new Authoriser([
-            new FixedPolicy(AuthorisationResult::allowed()),
-            new FixedPolicy(AuthorisationResult::allowed()),
-        ]);
+        $authoriser = new Authoriser([self::allowing(), self::allowing()]);
 
         $this->expectException(AmbiguousPolicyException::class);
 
@@ -258,12 +256,10 @@ final class AuthoriserTest extends TestCase
     }
 
     #[Test]
-    public function it_refuses_to_decide_with_only_one_policy_when_more_than_one_applies(): void
+    #[DataProvider('ambiguousPairs')]
+    public function it_refuses_to_decide_with_only_one_policy_when_two_apply(Policy $first, Policy $second): void
     {
-        $authoriser = new Authoriser([
-            new FixedPolicy(AuthorisationResult::allowed()),
-            new FixedPolicy(AuthorisationResult::denied()),
-        ], DecisionStrategy::OnlyOne);
+        $authoriser = new Authoriser([$first, $second], DecisionStrategy::OnlyOne);
 
         $this->expectException(AmbiguousPolicyException::class);
 
@@ -271,11 +267,67 @@ final class AuthoriserTest extends TestCase
     }
 
     #[Test]
-    public function it_allows_when_at_least_one_policy_allows(): void
+    public function it_attaches_the_one_policy_that_allows_with_only_one_policy(): void
     {
-        $denying = new FixedPolicy(AuthorisationResult::denied());
-        $allowing = new FixedPolicy(AuthorisationResult::allowed());
-        $alsoAllowing = new FixedPolicy(AuthorisationResult::allowed());
+        $allowing = self::allowing();
+
+        $result = new Authoriser([self::abstaining(), $allowing], DecisionStrategy::OnlyOne)->authorise(
+            self::context(),
+        );
+
+        self::assertTrue($result->isAllowed());
+        self::assertSame($allowing, $result->policy);
+        self::assertNull($result->denial);
+        self::assertEquals([PolicyDecision::allowed($allowing)], $result->decisions);
+    }
+
+    #[Test]
+    public function it_attaches_the_one_policy_that_denies_and_its_denial_with_only_one_policy(): void
+    {
+        $denial = new AuthorisationDenial('You do not own this resource.');
+        $denying = self::denying($denial);
+
+        $result = new Authoriser([$denying, self::abstaining()], DecisionStrategy::OnlyOne)->authorise(self::context());
+
+        self::assertTrue($result->isDenied());
+        self::assertSame($denying, $result->policy);
+        self::assertSame($denial, $result->denial);
+        self::assertEquals([PolicyDecision::denied($denying, $denial)], $result->decisions);
+    }
+
+    #[Test]
+    public function it_allows_with_the_one_policy_that_allows_at_least_once(): void
+    {
+        $allowing = self::allowing();
+
+        $result = new Authoriser([$allowing], DecisionStrategy::AtLeastOne)->authorise(self::context());
+
+        self::assertTrue($result->isAllowed());
+        self::assertSame($allowing, $result->policy);
+        self::assertEquals([PolicyDecision::allowed($allowing)], $result->decisions);
+    }
+
+    #[Test]
+    public function it_denies_collectively_when_the_one_policy_that_applies_denies_at_least_once(): void
+    {
+        $denial = new AuthorisationDenial('You do not own this resource.');
+        $denying = self::denying($denial);
+
+        $result = new Authoriser([$denying], DecisionStrategy::AtLeastOne)->authorise(self::context());
+
+        self::assertTrue($result->isDenied());
+        self::assertNull($result->policy);
+        self::assertNull($result->denial);
+        self::assertEquals([PolicyDecision::denied($denying, $denial)], $result->decisions);
+    }
+
+    #[Test]
+    public function it_allows_with_the_first_policy_that_allows_after_a_denial_at_least_once(): void
+    {
+        $denial = new AuthorisationDenial('You do not own this resource.');
+        $denying = self::denying($denial);
+        $allowing = self::allowing();
+        $alsoAllowing = self::allowing();
 
         $result = new Authoriser([$denying, $allowing, $alsoAllowing], DecisionStrategy::AtLeastOne)->authorise(
             self::context(),
@@ -284,99 +336,223 @@ final class AuthoriserTest extends TestCase
         self::assertTrue($result->isAllowed());
         self::assertSame($allowing, $result->policy);
         self::assertNull($result->denial);
-    }
-
-    #[Test]
-    public function it_denies_with_the_first_policy_that_denies_when_no_policy_allows_at_least_once(): void
-    {
-        $denial = new AuthorisationDenial('You can only edit posts you own.');
-        $denying = new FixedPolicy(AuthorisationResult::denied($denial));
-        $alsoDenying = new FixedPolicy(AuthorisationResult::denied());
-
-        $result = new Authoriser([
-            new FixedPolicy(AuthorisationResult::notApplicable()),
-            $denying,
-            $alsoDenying,
-        ], DecisionStrategy::AtLeastOne)->authorise(self::context());
-
-        self::assertTrue($result->isDenied());
-        self::assertSame($denying, $result->policy);
-        self::assertSame($denial, $result->denial);
-    }
-
-    #[Test]
-    public function it_denies_when_one_of_all_policies_denies(): void
-    {
-        $denial = new AuthorisationDenial('You can only edit posts you own.');
-        $allowing = new FixedPolicy(AuthorisationResult::allowed());
-        $denying = new FixedPolicy(AuthorisationResult::denied($denial));
-        $alsoDenying = new FixedPolicy(AuthorisationResult::denied());
-
-        $result = new Authoriser([$allowing, $denying, $alsoDenying], DecisionStrategy::All)->authorise(
-            self::context(),
+        self::assertEquals(
+            [
+                PolicyDecision::denied($denying, $denial),
+                PolicyDecision::allowed($allowing),
+                PolicyDecision::allowed($alsoAllowing),
+            ],
+            $result->decisions,
         );
-
-        self::assertTrue($result->isDenied());
-        self::assertSame($denying, $result->policy);
-        self::assertSame($denial, $result->denial);
     }
 
     #[Test]
-    public function it_allows_with_the_first_policy_when_all_policies_that_apply_allow(): void
+    public function it_allows_with_the_policy_that_allows_before_a_denial_at_least_once(): void
     {
-        $allowing = new FixedPolicy(AuthorisationResult::allowed());
-        $alsoAllowing = new FixedPolicy(AuthorisationResult::allowed());
+        $allowing = self::allowing();
+        $denying = self::denying();
 
-        $result = new Authoriser([
-            new FixedPolicy(AuthorisationResult::notApplicable()),
-            $allowing,
-            $alsoAllowing,
-        ], DecisionStrategy::All)->authorise(self::context());
+        $result = new Authoriser([$allowing, $denying], DecisionStrategy::AtLeastOne)->authorise(self::context());
 
         self::assertTrue($result->isAllowed());
         self::assertSame($allowing, $result->policy);
+        self::assertEquals([PolicyDecision::allowed($allowing), PolicyDecision::denied($denying)], $result->decisions);
     }
 
     #[Test]
-    #[DataProvider('strategies')]
-    public function it_does_not_apply_when_no_policy_applies_with_any_strategy(DecisionStrategy $strategy): void
+    public function it_denies_collectively_and_keeps_every_denial_when_every_policy_denies_at_least_once(): void
     {
-        $result = new Authoriser([
-            new FixedPolicy(AuthorisationResult::notApplicable()),
-            new FixedPolicy(AuthorisationResult::notApplicable()),
-        ], $strategy)->authorise(self::context());
+        $notOwner = new AuthorisationDenial('You do not own this resource.');
+        $noSubscription = new AuthorisationDenial('Your subscription does not permit this action.');
+        $first = self::denying($notOwner);
+        $second = self::denying($noSubscription);
+        $third = self::denying();
 
-        self::assertTrue($result->isNotApplicable());
+        $result = new Authoriser([
+            $first,
+            self::abstaining(),
+            $second,
+            $third,
+        ], DecisionStrategy::AtLeastOne)->authorise(self::context());
+
+        self::assertTrue($result->isDenied());
         self::assertNull($result->policy);
+        self::assertNull($result->denial);
+        self::assertEquals(
+            [
+                PolicyDecision::denied($first, $notOwner),
+                PolicyDecision::denied($second, $noSubscription),
+                PolicyDecision::denied($third),
+            ],
+            $result->decisions,
+        );
+        self::assertSame($notOwner, $result->decisions[0]->denial);
+        self::assertSame($noSubscription, $result->decisions[1]->denial);
     }
 
     #[Test]
-    #[DataProvider('strategies')]
-    public function it_decides_with_the_one_policy_that_applies_with_any_strategy(DecisionStrategy $strategy): void
+    public function it_allows_collectively_when_the_one_policy_that_applies_allows_for_all(): void
     {
-        $denying = new FixedPolicy(AuthorisationResult::denied());
+        $allowing = self::allowing();
 
-        $result = new Authoriser([
-            new FixedPolicy(AuthorisationResult::notApplicable()),
-            $denying,
-        ], $strategy)->authorise(self::context());
+        $result = new Authoriser([$allowing], DecisionStrategy::All)->authorise(self::context());
+
+        self::assertTrue($result->isAllowed());
+        self::assertNull($result->policy);
+        self::assertEquals([PolicyDecision::allowed($allowing)], $result->decisions);
+    }
+
+    #[Test]
+    public function it_denies_with_the_one_policy_that_denies_for_all(): void
+    {
+        $denial = new AuthorisationDenial('You do not own this resource.');
+        $denying = self::denying($denial);
+
+        $result = new Authoriser([$denying], DecisionStrategy::All)->authorise(self::context());
 
         self::assertTrue($result->isDenied());
         self::assertSame($denying, $result->policy);
+        self::assertSame($denial, $result->denial);
+        self::assertEquals([PolicyDecision::denied($denying, $denial)], $result->decisions);
+    }
+
+    #[Test]
+    public function it_allows_collectively_when_every_policy_that_applies_allows_for_all(): void
+    {
+        $first = self::allowing();
+        $second = self::allowing();
+
+        $result = new Authoriser([$first, self::abstaining(), $second], DecisionStrategy::All)->authorise(
+            self::context(),
+        );
+
+        self::assertTrue($result->isAllowed());
+        self::assertNull($result->policy);
+        self::assertNull($result->denial);
+        self::assertEquals([PolicyDecision::allowed($first), PolicyDecision::allowed($second)], $result->decisions);
+    }
+
+    #[Test]
+    public function it_denies_with_the_policy_that_denies_after_an_allow_for_all(): void
+    {
+        $denial = new AuthorisationDenial('Your subscription does not permit this action.');
+        $allowing = self::allowing();
+        $denying = self::denying($denial);
+
+        $result = new Authoriser([$allowing, $denying], DecisionStrategy::All)->authorise(self::context());
+
+        self::assertTrue($result->isDenied());
+        self::assertSame($denying, $result->policy);
+        self::assertSame($denial, $result->denial);
+        self::assertEquals(
+            [PolicyDecision::allowed($allowing), PolicyDecision::denied($denying, $denial)],
+            $result->decisions,
+        );
+    }
+
+    #[Test]
+    public function it_denies_with_the_first_policy_that_denies_and_keeps_every_denial_for_all(): void
+    {
+        $notOwner = new AuthorisationDenial('You do not own this resource.');
+        $noSubscription = new AuthorisationDenial('Your subscription does not permit this action.');
+        $first = self::denying($notOwner);
+        $allowing = self::allowing();
+        $second = self::denying($noSubscription);
+
+        $result = new Authoriser([$first, $allowing, $second], DecisionStrategy::All)->authorise(self::context());
+
+        self::assertTrue($result->isDenied());
+        self::assertSame($first, $result->policy);
+        self::assertSame($notOwner, $result->denial);
+        self::assertEquals(
+            [
+                PolicyDecision::denied($first, $notOwner),
+                PolicyDecision::allowed($allowing),
+                PolicyDecision::denied($second, $noSubscription),
+            ],
+            $result->decisions,
+        );
+    }
+
+    #[Test]
+    #[DataProvider('strategies')]
+    public function it_does_not_apply_without_a_policy_that_applies_with_any_strategy(DecisionStrategy $strategy): void
+    {
+        $first = self::abstaining();
+        $second = self::abstaining();
+
+        $result = new Authoriser([$first, $second], $strategy)->authorise(self::context());
+
+        self::assertTrue($result->isNotApplicable());
+        self::assertNull($result->policy);
+        self::assertNull($result->denial);
+        self::assertSame([], $result->decisions);
+        self::assertSame([$first, $second], $result->consulted);
+    }
+
+    #[Test]
+    #[DataProvider('strategies')]
+    public function it_does_not_apply_without_policies_with_any_strategy(DecisionStrategy $strategy): void
+    {
+        $result = new Authoriser([], $strategy)->authorise(self::context());
+
+        self::assertTrue($result->isNotApplicable());
+        self::assertSame([], $result->decisions);
+        self::assertSame([], $result->consulted);
     }
 
     #[Test]
     #[DataProvider('agreeingStrategies')]
     public function it_asks_every_policy_after_the_outcome_is_certain(DecisionStrategy $strategy): void
     {
-        $first = new FixedPolicy(AuthorisationResult::denied());
-        $second = new FixedPolicy(AuthorisationResult::allowed());
-        $third = new FixedPolicy(AuthorisationResult::denied());
+        $first = self::denying();
+        $second = self::allowing();
+        $third = self::denying();
 
         $result = new Authoriser([$first, $second, $third], $strategy)->authorise(self::context());
 
         self::assertCount(1, $third->contexts);
         self::assertSame([$first, $second, $third], $result->consulted);
+        self::assertCount(3, $result->decisions);
+    }
+
+    #[Test]
+    #[DataProvider('strategies')]
+    public function it_records_decisions_in_the_order_of_the_policies(DecisionStrategy $strategy): void
+    {
+        $denying = self::denying();
+
+        $result = new Authoriser(self::generate(self::abstaining(), $denying), $strategy)->authorise(self::context());
+
+        self::assertEquals([PolicyDecision::denied($denying)], $result->decisions);
+    }
+
+    #[Test]
+    public function it_replaces_what_a_policy_attached_to_its_own_result(): void
+    {
+        $inner = self::allowing();
+        $deciding = new FixedPolicy(
+            AuthorisationResult::allowed()
+                ->withPolicy($inner)
+                ->withConsulted($inner)
+                ->withDecisions(PolicyDecision::allowed($inner)),
+        );
+
+        $result = new Authoriser([$deciding])->authorise(self::context());
+
+        self::assertSame($deciding, $result->policy);
+        self::assertSame([$deciding], $result->consulted);
+        self::assertEquals([PolicyDecision::allowed($deciding)], $result->decisions);
+    }
+
+    /**
+     * @return iterable<string, array{Policy, Policy}>
+     */
+    public static function ambiguousPairs(): iterable
+    {
+        yield 'two that allow' => [self::allowing(), self::allowing()];
+        yield 'two that deny' => [self::denying(), self::denying()];
+        yield 'one that allows and one that denies' => [self::allowing(), self::denying()];
     }
 
     /**
@@ -396,6 +572,21 @@ final class AuthoriserTest extends TestCase
     {
         yield 'at least one' => [DecisionStrategy::AtLeastOne];
         yield 'all' => [DecisionStrategy::All];
+    }
+
+    private static function allowing(): FixedPolicy
+    {
+        return new FixedPolicy(AuthorisationResult::allowed());
+    }
+
+    private static function denying(?AuthorisationDenial $denial = null): FixedPolicy
+    {
+        return new FixedPolicy(AuthorisationResult::denied($denial));
+    }
+
+    private static function abstaining(): FixedPolicy
+    {
+        return new FixedPolicy(AuthorisationResult::notApplicable());
     }
 
     private static function context(): AuthorisationContext
