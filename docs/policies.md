@@ -6,7 +6,8 @@ description: How to write a policy, what an authorisation context holds, and how
 ---
 
 A policy answers one question: may this actor perform this ability on this subject? The authoriser asks every policy an
-application registers and returns the answer of the one policy that applies.
+application registers and combines the answers of the policies that apply into one result, following its decision
+strategy.
 
 ## Authorisation context
 
@@ -56,7 +57,7 @@ final class ArticlePolicy implements Policy
 
 Return `notApplicable()` for every context the policy is not responsible for. `denied()` means the policy is
 responsible and says no. Using `denied()` for a context the policy does not own makes it collide with the policy that
-does own it.
+does own it under `OnlyOne`, and overrules it under `All`.
 
 ## The authoriser
 
@@ -70,16 +71,44 @@ $authoriser = new Authoriser([new ArticlePolicy(), new CommentPolicy()]);
 $result = $authoriser->authorise(new AuthorisationContext($user, 'edit', $article));
 ```
 
-It asks every policy, in order, and decides as follows:
+Keys of the iterable are ignored, so a generator that repeats a key still passes every policy.
 
-| Policies that did not return `NotApplicable` | `authorise()`                                                         |
-|----------------------------------------------|-----------------------------------------------------------------------|
-| None                                         | Returns a `NotApplicable` result with no policy.                      |
-| Exactly one                                  | Returns that policy's result, with that policy attached as `policy`.  |
-| More than one                                | Throws `AmbiguousPolicyException`, even when the policies agree.      |
+## Decision strategies
 
-Order therefore never changes the outcome: a policy cannot win by being registered first. Keys of the iterable are
-ignored, so a generator that repeats a key still passes every policy.
+The second argument chooses how the answers of the policies that apply are combined. It defaults to `OnlyOne`:
+
+```php
+use Dirthara\Authorisation\DecisionStrategy;
+
+new Authoriser($policies);
+new Authoriser($policies, DecisionStrategy::AtLeastOne);
+new Authoriser($policies, DecisionStrategy::All);
+```
+
+| `DecisionStrategy` | Allowed when                            | Denied when                         | More than one applies               |
+|--------------------|-----------------------------------------|-------------------------------------|-------------------------------------|
+| `OnlyOne`          | The one policy that applies allows.     | The one policy that applies denies. | Throws `AmbiguousPolicyException`.  |
+| `AtLeastOne`       | Any policy that applies allows.         | Every policy that applies denies.   | Allowed if any of them allows.      |
+| `All`              | Every policy that applies allows.       | Any policy that applies denies.     | Denied if any of them denies.       |
+
+With every strategy, policies that return `NotApplicable` are ignored, and the result is `NotApplicable` when no policy
+applies. `OnlyOne` is the default because it keeps one policy responsible for every question; choose `AtLeastOne` or
+`All` when several policies are meant to answer the same question, such as an ownership rule alongside a role rule.
+
+The authoriser always asks every policy, even when the outcome is already certain, so `consulted` lists all of them and
+a policy with side effects runs on every authorisation. `OnlyOne` is the exception: it stops at the second policy that
+applies and throws.
+
+The result carries the first policy, in order, whose answer matches the outcome, along with that policy's denial:
+
+| `DecisionStrategy` | `policy` of an `Allowed` result | `policy` and `denial` of a `Denied` result |
+|--------------------|---------------------------------|--------------------------------------------|
+| `OnlyOne`          | The policy that allowed.        | The policy that denied.                    |
+| `AtLeastOne`       | The first policy that allowed.  | The first policy that denied.              |
+| `All`              | The first policy that allowed.  | The first policy that denied.              |
+
+Order never changes the status of the result, only which of several agreeing policies it names under `AtLeastOne`
+and `All`.
 
 :::caution
 A `NotApplicable` result means no policy is responsible for the question, not that the actor is allowed. Treat it as a
@@ -128,9 +157,9 @@ try {
 
 ## Depending on the contract
 
-`Authoriser` implements `Dirthara\Authorisation\Contract\Authoriser`, which declares only `authorise()`. Type against the
-contract in code that needs a decision, so an application can replace the policy-list authoriser without changing that
-code:
+`Authoriser` implements `Dirthara\Authorisation\Contract\Authoriser`, which declares only `authorise()`. Type against
+the contract in code that needs a decision, so an application can replace the policy-list authoriser without changing
+that code:
 
 ```php
 use Dirthara\Authorisation\Contract\Authoriser;

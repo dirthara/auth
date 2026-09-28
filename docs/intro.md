@@ -6,8 +6,8 @@ description: What the Dirthara Authorisation package does and where to start.
 ---
 
 Authorisation for the Dirthara framework. An application writes policies, each deciding whether an actor may perform an
-ability on a subject, and an authoriser asks every policy and returns a single result: allowed, denied, or not
-applicable. The result records which policy decided and, for a denial, why.
+ability on a subject, and an authoriser asks every policy and combines their answers into a single result: allowed,
+denied, or not applicable. The result records which policy decided and, for a denial, why.
 
 The package has no runtime dependencies and does not know about requests, sessions, or users. It decides; the
 application chooses what to do with the decision.

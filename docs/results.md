@@ -39,8 +39,8 @@ exception.
 
 `policy` records which policy owns a decision. A `null` policy means no provenance has been attached to the result.
 
-`Authoriser` attaches the provenance. When exactly one policy applies, the result it returns carries that exact policy
-instance, so two instances of the same policy class remain distinguishable:
+`Authoriser` attaches the provenance. The result it returns carries the exact policy instance that decided, so two
+instances of the same policy class remain distinguishable:
 
 ```php
 use Dirthara\Authorisation\Authoriser;
@@ -59,11 +59,14 @@ the contract, so it does not rely on how the decision is reached.
 
 For a result returned by `Authoriser`:
 
-| Status          | `policy`                            |
-|-----------------|-------------------------------------|
-| `Allowed`       | The policy that allowed.            |
-| `Denied`        | The policy that denied.             |
-| `NotApplicable` | `null`, because no policy applied.  |
+| Status          | `policy`                                                   |
+|-----------------|------------------------------------------------------------|
+| `Allowed`       | The policy that allowed, or the first of several.          |
+| `Denied`        | The policy that denied, or the first of several.           |
+| `NotApplicable` | `null`, because no policy applied.                         |
+
+Which policies may agree depends on the authoriser's
+[decision strategy](policies.md#decision-strategies).
 
 A policy does not attach itself. It returns `AuthorisationResult::allowed()` or another factory as usual, and a result
 returned directly by a policy normally has a `null` policy:
@@ -83,8 +86,8 @@ Only an `Allowed` or `Denied` result can have a deciding policy. Calling `withPo
 throws `NotApplicableResultException`, because no policy decided it.
 
 :::caution
-`Authoriser` asks every policy, even after one has decided. When more than one policy returns anything other than
-`NotApplicable`, it throws `AmbiguousPolicyException` instead of returning a result, even when those policies agree.
+With the default `OnlyOne` strategy, `Authoriser` throws `AmbiguousPolicyException` instead of returning a result when
+more than one policy returns anything other than `NotApplicable`, even when those policies agree.
 :::
 
 ## Consulted policies

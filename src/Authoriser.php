@@ -20,15 +20,18 @@ final readonly class Authoriser implements AuthoriserContract
     /**
      * @param iterable<Policy> $policies
      */
-    public function __construct(iterable $policies)
-    {
+    public function __construct(
+        iterable $policies,
+        private DecisionStrategy $strategy = DecisionStrategy::OnlyOne,
+    ) {
         $this->policies = iterator_to_array($policies, preserve_keys: false);
     }
 
     public function authorise(AuthorisationContext $context): AuthorisationResult
     {
-        $result = null;
-        $decidedBy = null;
+        $applicable = null;
+        $allowed = null;
+        $denied = null;
 
         foreach ($this->policies as $policy) {
             $policyResult = $policy->authorise($context);
@@ -37,18 +40,24 @@ final readonly class Authoriser implements AuthoriserContract
                 continue;
             }
 
-            if ($decidedBy !== null) {
-                throw AmbiguousPolicyException::forContext($context, $decidedBy, $policy);
+            if ($applicable !== null && $this->strategy === DecisionStrategy::OnlyOne) {
+                throw AmbiguousPolicyException::forContext($context, $applicable, $policy);
             }
 
-            $result = $policyResult;
-            $decidedBy = $policy;
+            $applicable ??= $policy;
+
+            if ($policyResult->isAllowed()) {
+                $allowed ??= $policyResult->withPolicy($policy);
+            } else {
+                $denied ??= $policyResult->withPolicy($policy);
+            }
         }
 
-        if ($result === null || $decidedBy === null) {
-            return AuthorisationResult::notApplicable()->withConsulted(...$this->policies);
-        }
+        $result = match ($this->strategy) {
+            DecisionStrategy::OnlyOne, DecisionStrategy::AtLeastOne => $allowed ?? $denied,
+            DecisionStrategy::All => $denied ?? $allowed,
+        };
 
-        return $result->withPolicy($decidedBy)->withConsulted(...$this->policies);
+        return ($result ?? AuthorisationResult::notApplicable())->withConsulted(...$this->policies);
     }
 }

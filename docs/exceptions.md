@@ -24,7 +24,7 @@ try {
 
 | Exception                      | Extends            | Thrown when                                                           |
 |--------------------------------|--------------------|-----------------------------------------------------------------------|
-| `AmbiguousPolicyException`     | `RuntimeException` | More than one policy did not return `NotApplicable` for one context. |
+| `AmbiguousPolicyException`     | `RuntimeException` | Under `OnlyOne`, more than one policy applies to one context.        |
 | `NotApplicableResultException` | `RuntimeException` | `withPolicy()` is called on a `NotApplicable` result.                 |
 | `AuthorisationDeniedException` | `RuntimeException` | `Enforcer::ensure()` gets a `Denied` or `NotApplicable` result.       |
 
@@ -47,7 +47,8 @@ a string ability are escaped so the message cannot forge a log line.
 The actor and subject are recorded by type only, so the context does not copy user data into a log.
 
 Fix the policies rather than catching this exception: two policies claim the same question, and one of them should
-return `notApplicable()` for it.
+return `notApplicable()` for it. When several policies are meant to answer the same question, construct the authoriser
+with `DecisionStrategy::AtLeastOne` or `DecisionStrategy::All` instead.
 
 ## NotApplicableResultException
 
