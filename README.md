@@ -4,7 +4,7 @@
 
 # Dirthara Auth
 
-Authentication and authorisation for the Dirthara framework. This repository is the initial package scaffold; no public API or release is available yet. Usage 
+Authorisation for the Dirthara framework. This repository is the initial package scaffold; no public API or release is available yet. Usage 
 documentation lives in [`docs`](docs/intro.md) and is published on the Dirthara documentation site at 
 <https://dirthara.github.io/docs/>, which documents every package in the framework.
 
@@ -18,12 +18,8 @@ composer require dirthara/auth
 
 ## Docker development environment
 
-Requires Docker with Docker Compose. The development image provides PHP 8.5 CLI, Composer 2.10.3, Mago 1.47.3, Xdebug, 
-and a PDO driver for every database the package supports: `pdo_sqlite`, `pdo_mysql`, `pdo_pgsql`, and `pdo_sqlsrv`.
-
-If your package does need a database, you may remove the `pdo_*` drivers from the image and remove the database 
-containers from `compose.yaml`. If your package does not a database, you must write tests against all supported 
-databases.
+Requires Docker with Docker Compose. The development image provides PHP 8.5 CLI, Composer 2.10.3, Mago 1.47.3, and 
+Xdebug. No database services are needed.
 
 ```sh
 git clone git@github.com:dirthara/auth.git
@@ -35,11 +31,6 @@ docker compose exec php composer install
 The container runs as the non-root `developer` user. The build arguments `LOCAL_UID` and `LOCAL_GID` default to 1000; 
 the command above uses your host IDs so generated files remain editable. Set `PHP_VERSION` to override the default
 8.5 image. Rebuild when the Dockerfile or build arguments change.
-
-`docker compose up -d php` also starts PostgreSQL, MySQL, and SQL Server and waits until each reports healthy, because 
-the tests run against every driver the package supports. The first start pulls roughly a gigabyte of images, and SQL
-Server takes around thirty seconds to accept connections. The SQL Server image is published for amd64 only, so its tests 
-skip on an arm64 host.
 
 Open a shell or stop the environment with:
 
@@ -55,11 +46,6 @@ docker compose exec php composer test
 ```
 
 Tests belong in `tests`, under `Dirthara\Auth\Tests`. Source belongs in`src`, under `Dirthara\Auth`.
-
-Behaviour that needs a real database belongs in `tests/Integration`, where one conformance suite runs against every 
-driver. SQLite runs in memory and always runs; the PostgreSQL, MySQL, and SQL Server suites skip when their PDO driver 
-is missing, and read their connection from `DIRTHARA_POSTGRES_*`, `DIRTHARA_MYSQL_*`, and `DIRTHARA_SQLSRV_*` 
-(`_HOST`, `_PORT`, `_DATABASE`, `_USERNAME`, `_PASSWORD`), defaulting to the services in `compose.yaml`.
 
 The package starts with its exception interface, `Dirthara\Auth\Exception\AuthException`, and the 
 `HasExceptionContext` trait every exception uses to carry its context, both covered by tests.

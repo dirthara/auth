@@ -5,7 +5,7 @@ sidebar_position: 1
 description: Status and scope of the Dirthara Auth package.
 ---
 
-Authentication and authorisation for the Dirthara framework.
+Authorisation for the Dirthara framework.
 
 :::note
 The package is an initial scaffold. There is no public API or published

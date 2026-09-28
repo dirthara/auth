@@ -1,6 +1,6 @@
 {
     "name": "dirthara/auth",
-    "description": "Authentication and authorisation for the Dirthara framework",
+    "description": "Authorisation for the Dirthara framework",
     "type": "library",
     "homepage": "https://dirthara.github.io/docs/",
     "require": {
