@@ -113,3 +113,74 @@ enabled = false
 
 [linter.rules.too-many-properties]
 enabled = false
+
+# The package depends on nothing beyond PHP. The contracts depend only on the values they exchange, the exceptions never
+# depend on the authoriser or the enforcer, and the testing support is used only by tests.
+[guard.perimeter.layers]
+values = [
+    "Dirthara\\Authorisation\\AuthorisationContext",
+    "Dirthara\\Authorisation\\AuthorisationResult",
+    "Dirthara\\Authorisation\\AuthorisationStatus",
+    "Dirthara\\Authorisation\\AuthorisationDenial",
+    "Dirthara\\Authorisation\\PolicyDecision",
+]
+
+[[guard.perimeter.rules]]
+namespace = "Dirthara\\Authorisation\\"
+permit = [
+    "@native",
+    "Dirthara\\Authorisation\\",
+    "Dirthara\\Authorisation\\Contract\\",
+    "Dirthara\\Authorisation\\Exception\\",
+]
+
+[[guard.perimeter.rules]]
+namespace = "Dirthara\\Authorisation\\Contract\\"
+permit = ["@native", "@layer:values", "Dirthara\\Authorisation\\Contract\\"]
+
+[[guard.perimeter.rules]]
+namespace = "Dirthara\\Authorisation\\Exception\\"
+permit = [
+    "@native",
+    "@layer:values",
+    "Dirthara\\Authorisation\\Contract\\",
+    "Dirthara\\Authorisation\\Exception\\",
+]
+
+[[guard.perimeter.rules]]
+namespace = "Dirthara\\Authorisation\\Testing\\"
+permit = ["@native", "@layer:values", "Dirthara\\Authorisation\\Contract\\"]
+
+[[guard.perimeter.rules]]
+namespace = "Dirthara\\Authorisation\\Tests\\"
+permit = ["@all"]
+
+# CS-1 §15: classes are final.
+[[guard.structural.rules]]
+on = "Dirthara\\Authorisation\\**"
+target = "class"
+must-be-final = true
+reason = "Classes are final (CS-1 §15)."
+
+[[guard.structural.rules]]
+on = "Dirthara\\Authorisation\\Contract\\**"
+must-be = ["interface"]
+reason = "The Contract namespace holds only interfaces."
+
+# CS-7: every exception implements the package interface and carries its context through the shared trait.
+[[guard.structural.rules]]
+on = "Dirthara\\Authorisation\\Exception\\**"
+target = "class"
+must-be-named = "*Exception"
+must-implement = "Dirthara\\Authorisation\\Exception\\AuthorisationException"
+must-use-trait = "Dirthara\\Authorisation\\Exception\\HasExceptionContext"
+reason = "Package exceptions implement AuthorisationException and use HasExceptionContext (CS-7)."
+
+# CS-3: test classes are suffixed with Test.
+[[guard.structural.rules]]
+on = "Dirthara\\Authorisation\\Tests\\**"
+not-on = "Dirthara\\Authorisation\\Tests\\Fixtures\\**"
+target = "class"
+must-be-named = "*Test"
+must-extend = "PHPUnit\\Framework\\TestCase"
+reason = "Test classes are PHPUnit test cases suffixed with Test (CS-3)."
