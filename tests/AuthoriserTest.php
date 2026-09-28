@@ -9,6 +9,7 @@ use Generator;
 use Dirthara\Auth\Authoriser;
 use PHPUnit\Framework\TestCase;
 use Dirthara\Auth\Contract\Policy;
+use Dirthara\Auth\AuthorisationDenial;
 use Dirthara\Auth\AuthorisationResult;
 use PHPUnit\Framework\Attributes\Test;
 use Dirthara\Auth\AuthorisationContext;
@@ -24,6 +25,7 @@ final class AuthoriserTest extends TestCase
 
         self::assertTrue($result->isNotApplicable());
         self::assertNull($result->policy);
+        self::assertNull($result->denial);
     }
 
     #[Test]
@@ -38,6 +40,7 @@ final class AuthoriserTest extends TestCase
 
         self::assertTrue($result->isNotApplicable());
         self::assertNull($result->policy);
+        self::assertNull($result->denial);
     }
 
     #[Test]
@@ -49,6 +52,7 @@ final class AuthoriserTest extends TestCase
 
         self::assertTrue($result->isAllowed());
         self::assertSame($allowing, $result->policy);
+        self::assertNull($result->denial);
     }
 
     #[Test]
@@ -60,6 +64,35 @@ final class AuthoriserTest extends TestCase
 
         self::assertTrue($result->isDenied());
         self::assertSame($denying, $result->policy);
+        self::assertNull($result->denial);
+    }
+
+    #[Test]
+    public function it_keeps_the_denial_of_the_one_policy_that_denies(): void
+    {
+        $denial = new AuthorisationDenial('{actor} cannot modify this resource.', parameters: ['actor' => 'Ada']);
+        $denying = new FixedPolicy(AuthorisationResult::denied($denial));
+        $authoriser = new Authoriser([new FixedPolicy(AuthorisationResult::notApplicable()), $denying]);
+
+        $result = $authoriser->authorise(self::context());
+
+        self::assertTrue($result->isDenied());
+        self::assertSame($denying, $result->policy);
+        self::assertSame($denial, $result->denial);
+        self::assertSame('Ada cannot modify this resource.', $denial->message);
+    }
+
+    #[Test]
+    public function it_refuses_to_decide_when_a_policy_that_denies_with_a_denial_is_not_the_only_one(): void
+    {
+        $authoriser = new Authoriser([
+            new FixedPolicy(AuthorisationResult::denied(new AuthorisationDenial('You can only edit posts you own.'))),
+            new FixedPolicy(AuthorisationResult::allowed()),
+        ]);
+
+        $this->expectException(AmbiguousPolicyException::class);
+
+        $authoriser->authorise(self::context());
     }
 
     #[Test]

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Dirthara\Auth\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Dirthara\Auth\AuthorisationDenial;
 use Dirthara\Auth\AuthorisationResult;
 use Dirthara\Auth\AuthorisationStatus;
 use PHPUnit\Framework\Attributes\Test;
@@ -19,6 +20,7 @@ final class AuthorisationResultTest extends TestCase
 
         self::assertSame(AuthorisationStatus::Allowed, $result->status);
         self::assertNull($result->policy);
+        self::assertNull($result->denial);
         self::assertTrue($result->isAllowed());
         self::assertFalse($result->isDenied());
         self::assertFalse($result->isNotApplicable());
@@ -31,6 +33,7 @@ final class AuthorisationResultTest extends TestCase
 
         self::assertSame(AuthorisationStatus::Denied, $result->status);
         self::assertNull($result->policy);
+        self::assertNull($result->denial);
         self::assertFalse($result->isAllowed());
         self::assertTrue($result->isDenied());
         self::assertFalse($result->isNotApplicable());
@@ -43,6 +46,7 @@ final class AuthorisationResultTest extends TestCase
 
         self::assertSame(AuthorisationStatus::NotApplicable, $result->status);
         self::assertNull($result->policy);
+        self::assertNull($result->denial);
         self::assertFalse($result->isAllowed());
         self::assertFalse($result->isDenied());
         self::assertTrue($result->isNotApplicable());
@@ -91,5 +95,43 @@ final class AuthorisationResultTest extends TestCase
         self::assertNotSame($otherPolicy, $withPolicy->policy);
         self::assertSame($otherPolicy, $withPolicy->withPolicy($otherPolicy)->policy);
         self::assertSame($policy, $withPolicy->policy);
+    }
+
+    #[Test]
+    public function it_denies_with_the_exact_denial(): void
+    {
+        $denial = new AuthorisationDenial('You can only edit posts you own.');
+
+        $result = AuthorisationResult::denied($denial);
+
+        self::assertSame(AuthorisationStatus::Denied, $result->status);
+        self::assertTrue($result->isDenied());
+        self::assertSame($denial, $result->denial);
+        self::assertNull($result->policy);
+    }
+
+    #[Test]
+    public function it_keeps_the_status_and_the_denial_when_a_policy_is_attached(): void
+    {
+        $denial = new AuthorisationDenial('You can only edit posts you own.');
+        $result = AuthorisationResult::denied($denial);
+        $policy = new FixedPolicy($result);
+
+        $withPolicy = $result->withPolicy($policy);
+
+        self::assertSame(AuthorisationStatus::Denied, $withPolicy->status);
+        self::assertSame($policy, $withPolicy->policy);
+        self::assertSame($denial, $withPolicy->denial);
+        self::assertNull($result->policy);
+        self::assertSame($denial, $result->denial);
+    }
+
+    #[Test]
+    public function it_attaches_a_policy_without_adding_a_denial(): void
+    {
+        $result = AuthorisationResult::denied()->withPolicy(new FixedPolicy(AuthorisationResult::denied()));
+
+        self::assertTrue($result->isDenied());
+        self::assertNull($result->denial);
     }
 }

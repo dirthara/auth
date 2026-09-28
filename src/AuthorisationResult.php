@@ -11,6 +11,7 @@ final readonly class AuthorisationResult
     private function __construct(
         public AuthorisationStatus $status,
         public ?Policy $policy = null,
+        public ?AuthorisationDenial $denial = null,
     ) {}
 
     public static function allowed(): self
@@ -18,9 +19,9 @@ final readonly class AuthorisationResult
         return new self(AuthorisationStatus::Allowed);
     }
 
-    public static function denied(): self
+    public static function denied(?AuthorisationDenial $denial = null): self
     {
-        return new self(AuthorisationStatus::Denied);
+        return new self(AuthorisationStatus::Denied, denial: $denial);
     }
 
     public static function notApplicable(): self
@@ -30,7 +31,7 @@ final readonly class AuthorisationResult
 
     public function withPolicy(Policy $policy): self
     {
-        return new self(status: $this->status, policy: $policy);
+        return new self(status: $this->status, policy: $policy, denial: $this->denial);
     }
 
     public function isAllowed(): bool
