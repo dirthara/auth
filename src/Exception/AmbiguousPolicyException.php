@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Dirthara\Authorisation\Exception;
 
-use UnitEnum;
 use Throwable;
 use RuntimeException;
 use Dirthara\Authorisation\Contract\Policy;
@@ -29,14 +28,10 @@ final class AmbiguousPolicyException extends RuntimeException implements Authori
 
     public static function forContext(AuthorisationContext $context, Policy $first, Policy $second): self
     {
-        $ability = $context->ability instanceof UnitEnum
-            ? $context->ability::class . '::' . $context->ability->name
-            : self::printable($context->ability);
-
         return new self(
             message: sprintf(
                 'The authorisation of "%s" is ambiguous: both %s and %s apply to it.',
-                $ability,
+                self::printableAbility($context->ability),
                 get_debug_type($first),
                 get_debug_type($second),
             ),

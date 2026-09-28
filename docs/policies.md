@@ -92,6 +92,40 @@ if (!$authoriser->authorise($context)->isAllowed()) {
 ```
 :::
 
+## Enforcing a decision
+
+`Enforcer` wraps any `Contract\Authoriser` for code that must stop when the actor may not act:
+
+```php
+use Dirthara\Authorisation\Enforcer;
+
+$enforcer = new Enforcer($authoriser);
+
+$result = $enforcer->ensure(new AuthorisationContext($user, 'edit', $article));
+
+if ($enforcer->allows(new AuthorisationContext($user, 'delete', $article))) {
+    // show the delete button
+}
+```
+
+| Method     | Returns                             | When the result is not `Allowed`         |
+|------------|-------------------------------------|------------------------------------------|
+| `ensure()` | The `Allowed` result and its policy. | Throws `AuthorisationDeniedException`.   |
+| `allows()` | `true` for an `Allowed` result.      | Returns `false`.                         |
+
+Both treat `NotApplicable` as a denial. The exception carries the full result, so a caller can still read the deciding
+policy and the denial:
+
+```php
+use Dirthara\Authorisation\Exception\AuthorisationDeniedException;
+
+try {
+    $enforcer->ensure($context);
+} catch (AuthorisationDeniedException $exception) {
+    $exception->result->denial?->message;
+}
+```
+
 ## Depending on the contract
 
 `Authoriser` implements `Dirthara\Authorisation\Contract\Authoriser`, which declares only `authorise()`. Type against the
