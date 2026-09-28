@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Dirthara\Auth\Tests\Exception;
+namespace Dirthara\Authorisation\Tests\Exception;
 
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
-use Dirthara\Auth\Exception\AuthException;
-use Dirthara\Auth\Tests\Fixtures\ContextualException;
+use Dirthara\Authorisation\Exception\AuthException;
+use Dirthara\Authorisation\Tests\Fixtures\ContextualException;
 
 final class HasExceptionContextTest extends TestCase
 {

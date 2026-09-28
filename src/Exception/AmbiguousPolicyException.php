@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Dirthara\Auth\Exception;
+namespace Dirthara\Authorisation\Exception;
 
 use UnitEnum;
 use Throwable;
 use RuntimeException;
-use Dirthara\Auth\Contract\Policy;
-use Dirthara\Auth\AuthorisationContext;
+use Dirthara\Authorisation\Contract\Policy;
+use Dirthara\Authorisation\AuthorisationContext;
 
 use function sprintf;
 use function get_debug_type;

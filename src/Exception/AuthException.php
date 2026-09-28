@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Dirthara\Auth\Exception;
+namespace Dirthara\Authorisation\Exception;
 
 use Throwable;
 

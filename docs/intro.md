@@ -1,8 +1,8 @@
 ---
 id: intro
-title: Dirthara Auth
+title: Dirthara Authorisation
 sidebar_position: 1
-description: Status and scope of the Dirthara Auth package.
+description: Status and scope of the Dirthara Authorisation package.
 ---
 
 Authorisation for the Dirthara framework.

@@ -97,7 +97,7 @@ package scores 100 before it is tagged; the packaging rules that get it there
 are in [agents/packaging.md](agents/packaging.md).
 
 ```sh
-curl -X POST https://plumbphp.dev/api/v1/packages/dirthara/auth
+curl -X POST https://plumbphp.dev/api/v1/packages/dirthara/authorisation
 ```
 
 Score the repository first and fix what it reports, because the checks split by

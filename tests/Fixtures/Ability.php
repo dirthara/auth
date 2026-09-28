@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Dirthara\Auth\Tests\Fixtures;
+namespace Dirthara\Authorisation\Tests\Fixtures;
 
 enum Ability
 {

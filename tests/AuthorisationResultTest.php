@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Dirthara\Auth\Tests;
+namespace Dirthara\Authorisation\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Dirthara\Auth\AuthorisationDenial;
-use Dirthara\Auth\AuthorisationResult;
-use Dirthara\Auth\AuthorisationStatus;
 use PHPUnit\Framework\Attributes\Test;
-use Dirthara\Auth\Tests\Fixtures\FixedPolicy;
+use Dirthara\Authorisation\AuthorisationDenial;
+use Dirthara\Authorisation\AuthorisationResult;
+use Dirthara\Authorisation\AuthorisationStatus;
+use Dirthara\Authorisation\Tests\Fixtures\FixedPolicy;
 
 final class AuthorisationResultTest extends TestCase
 {

@@ -9,7 +9,7 @@ Every authorisation returns an immutable `AuthorisationResult`. A policy creates
 `Authoriser` returns one after asking every policy.
 
 ```php
-use Dirthara\Auth\AuthorisationResult;
+use Dirthara\Authorisation\AuthorisationResult;
 
 AuthorisationResult::allowed();
 AuthorisationResult::denied();
@@ -41,8 +41,8 @@ exception.
 instance, so two instances of the same policy class remain distinguishable:
 
 ```php
-use Dirthara\Auth\Authoriser;
-use Dirthara\Auth\AuthorisationContext;
+use Dirthara\Authorisation\Authoriser;
+use Dirthara\Authorisation\AuthorisationContext;
 
 $authoriser = new Authoriser([$articlePolicy, $commentPolicy]);
 
@@ -84,8 +84,8 @@ $result = AuthorisationResult::denied()->withPolicy($articlePolicy);
 A policy may explain a denial with an `AuthorisationDenial`, or deny without giving a reason:
 
 ```php
-use Dirthara\Auth\AuthorisationDenial;
-use Dirthara\Auth\AuthorisationResult;
+use Dirthara\Authorisation\AuthorisationDenial;
+use Dirthara\Authorisation\AuthorisationResult;
 
 return AuthorisationResult::denied();
 

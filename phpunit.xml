@@ -10,7 +10,7 @@
          displayDetailsOnTestsThatTriggerWarnings="true"
          displayDetailsOnTestsThatTriggerErrors="true">
     <testsuites>
-        <testsuite name="Dirthara Auth">
+        <testsuite name="Dirthara Authorisation">
             <directory>tests</directory>
         </testsuite>
     </testsuites>

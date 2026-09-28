@@ -1,5 +1,5 @@
 {
-    "name": "dirthara/auth",
+    "name": "dirthara/authorisation",
     "description": "Authorisation for the Dirthara framework",
     "type": "library",
     "homepage": "https://dirthara.github.io/docs/",
@@ -12,12 +12,12 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Dirthara\\Auth\\": "src/"
+            "Dirthara\\Authorisation\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Dirthara\\Auth\\Tests\\": "tests/"
+            "Dirthara\\Authorisation\\Tests\\": "tests/"
         }
     },
     "authors": [
@@ -27,8 +27,8 @@
     ],
     "support": {
         "docs": "https://dirthara.github.io/docs/",
-        "issues": "https://github.com/dirthara/auth/issues",
-        "source": "https://github.com/dirthara/auth"
+        "issues": "https://github.com/dirthara/authorisation/issues",
+        "source": "https://github.com/dirthara/authorisation"
     },
     "prefer-stable": true,
     "config": {

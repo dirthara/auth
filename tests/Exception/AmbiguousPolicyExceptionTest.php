@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Dirthara\Auth\Tests\Exception;
+namespace Dirthara\Authorisation\Tests\Exception;
 
 use stdClass;
 use LogicException;
 use RuntimeException;
 use PHPUnit\Framework\TestCase;
-use Dirthara\Auth\AuthorisationResult;
 use PHPUnit\Framework\Attributes\Test;
-use Dirthara\Auth\AuthorisationContext;
-use Dirthara\Auth\Tests\Fixtures\Ability;
-use Dirthara\Auth\Exception\AuthException;
-use Dirthara\Auth\Tests\Fixtures\FixedPolicy;
-use Dirthara\Auth\Exception\AmbiguousPolicyException;
+use Dirthara\Authorisation\AuthorisationResult;
+use Dirthara\Authorisation\AuthorisationContext;
+use Dirthara\Authorisation\Tests\Fixtures\Ability;
+use Dirthara\Authorisation\Exception\AuthException;
+use Dirthara\Authorisation\Tests\Fixtures\FixedPolicy;
+use Dirthara\Authorisation\Exception\AmbiguousPolicyException;
 
 final class AmbiguousPolicyExceptionTest extends TestCase
 {

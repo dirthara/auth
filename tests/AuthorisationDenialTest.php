@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Dirthara\Auth\Tests;
+namespace Dirthara\Authorisation\Tests;
 
 use Error;
 use stdClass;
 use Stringable;
 use PHPUnit\Framework\TestCase;
-use Dirthara\Auth\AuthorisationDenial;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Dirthara\Authorisation\AuthorisationDenial;
 
 final class AuthorisationDenialTest extends TestCase
 {

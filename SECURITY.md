@@ -12,7 +12,7 @@ While the package is pre-1.0, only the latest release line receives fixes.
 ## Reporting a vulnerability
 
 Report vulnerabilities privately using GitHub's
-[Report a vulnerability](https://github.com/dirthara/auth/security/advisories/new)
+[Report a vulnerability](https://github.com/dirthara/authorisation/security/advisories/new)
 form. Do not disclose vulnerabilities in public issues or pull requests.
 
 Include the affected version or commit, PHP version, a minimal reproduction,

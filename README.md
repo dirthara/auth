@@ -2,7 +2,7 @@
   <img src="logo-no-bg.png" alt="Dirthara" width="480">
 </p>
 
-# Dirthara Auth
+# Dirthara Authorisation
 
 Authorisation for the Dirthara framework. This repository is the initial package scaffold; no public API or release is available yet. Usage 
 documentation lives in [`docs`](docs/intro.md) and is published on the Dirthara documentation site at 
@@ -13,7 +13,7 @@ documentation lives in [`docs`](docs/intro.md) and is published on the Dirthara 
 Requires PHP `^8.5` (PHP 8.5 or a later PHP 8 release), with no additional runtime Composer dependencies. Install with:
 
 ```sh
-composer require dirthara/auth
+composer require dirthara/authorisation
 ```
 
 ## Docker development environment
@@ -22,8 +22,8 @@ Requires Docker with Docker Compose. The development image provides PHP 8.5 CLI,
 Xdebug. No database services are needed.
 
 ```sh
-git clone git@github.com:dirthara/auth.git
-cd auth
+git clone git@github.com:dirthara/authorisation.git
+cd authorisation
 LOCAL_UID=$(id -u) LOCAL_GID=$(id -g) docker compose up -d --build php
 docker compose exec php composer install
 ```
@@ -45,9 +45,9 @@ docker compose down
 docker compose exec php composer test
 ```
 
-Tests belong in `tests`, under `Dirthara\Auth\Tests`. Source belongs in`src`, under `Dirthara\Auth`.
+Tests belong in `tests`, under `Dirthara\Authorisation\Tests`. Source belongs in`src`, under `Dirthara\Authorisation`.
 
-The package starts with its exception interface, `Dirthara\Auth\Exception\AuthException`, and the 
+The package starts with its exception interface, `Dirthara\Authorisation\Exception\AuthException`, and the 
 `HasExceptionContext` trait every exception uses to carry its context, both covered by tests.
 
 ## Code quality

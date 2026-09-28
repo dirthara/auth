@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Dirthara\Auth;
+namespace Dirthara\Authorisation;
 
-use Dirthara\Auth\Contract\Policy;
-use Dirthara\Auth\Exception\AmbiguousPolicyException;
+use Dirthara\Authorisation\Contract\Policy;
+use Dirthara\Authorisation\Exception\AmbiguousPolicyException;
 
 use function iterator_to_array;
 

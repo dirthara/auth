@@ -22,12 +22,12 @@ in `tests` with every implementation change.
 ## Development
 Use the PHP container for Composer and PHP commands; see [README.md](README.md). This package has no database services or 
 database dependencies.
-Use the `Dirthara\Auth` namespace for source and `Dirthara\Auth\Tests` for tests. Declare strict 
+Use the `Dirthara\Authorisation` namespace for source and `Dirthara\Authorisation\Tests` for tests. Declare strict 
 types in every PHP file.
 
 ## Exceptions
 Read and follow https://github.com/dirthara/coding-standards/blob/main/docs/coding-standards/cs-7-exceptions-error-handling.md when creating or modifying exceptions.
-Every exception implements `Dirthara\Auth\Exception\AuthException` and uses the 
+Every exception implements `Dirthara\Authorisation\Exception\AuthException` and uses the 
 `HasExceptionContext` trait for its context.
 
 ## Documentation

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Dirthara\Auth\Contract;
+namespace Dirthara\Authorisation\Contract;
 
-use Dirthara\Auth\AuthorisationResult;
-use Dirthara\Auth\AuthorisationContext;
+use Dirthara\Authorisation\AuthorisationResult;
+use Dirthara\Authorisation\AuthorisationContext;
 
 interface Policy
 {

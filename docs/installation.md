@@ -2,7 +2,7 @@
 id: installation
 title: Installation
 sidebar_position: 2
-description: Requirements and installation status for Dirthara Auth.
+description: Requirements and installation status for Dirthara Authorisation.
 ---
 
 ## Requirements
@@ -15,7 +15,7 @@ Composer dependencies beyond PHP.
 Once published, install the package using Composer:
 
 ```sh
-composer require dirthara/auth
+composer require dirthara/authorisation
 ```
 
 :::caution
@@ -24,5 +24,5 @@ installation after publication.
 :::
 
 For development, follow the Docker and Composer setup in the repository's
-[README](https://github.com/dirthara/auth#readme). Development tooling
+[README](https://github.com/dirthara/authorisation#readme). Development tooling
 includes PHPUnit, Mago, and Xdebug.

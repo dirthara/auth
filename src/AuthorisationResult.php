@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Dirthara\Auth;
+namespace Dirthara\Authorisation;
 
-use Dirthara\Auth\Contract\Policy;
+use Dirthara\Authorisation\Contract\Policy;
 
 final readonly class AuthorisationResult
 {

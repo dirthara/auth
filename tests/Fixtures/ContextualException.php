@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Dirthara\Auth\Tests\Fixtures;
+namespace Dirthara\Authorisation\Tests\Fixtures;
 
 use RuntimeException;
-use Dirthara\Auth\Exception\AuthException;
-use Dirthara\Auth\Exception\HasExceptionContext;
+use Dirthara\Authorisation\Exception\AuthException;
+use Dirthara\Authorisation\Exception\HasExceptionContext;
 
 final class ContextualException extends RuntimeException implements AuthException
 {

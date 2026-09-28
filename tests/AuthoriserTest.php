@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Dirthara\Auth\Tests;
+namespace Dirthara\Authorisation\Tests;
 
 use stdClass;
 use Generator;
-use Dirthara\Auth\Authoriser;
 use PHPUnit\Framework\TestCase;
-use Dirthara\Auth\Contract\Policy;
-use Dirthara\Auth\AuthorisationDenial;
-use Dirthara\Auth\AuthorisationResult;
+use Dirthara\Authorisation\Authoriser;
 use PHPUnit\Framework\Attributes\Test;
-use Dirthara\Auth\AuthorisationContext;
-use Dirthara\Auth\Tests\Fixtures\FixedPolicy;
-use Dirthara\Auth\Exception\AmbiguousPolicyException;
+use Dirthara\Authorisation\Contract\Policy;
+use Dirthara\Authorisation\AuthorisationDenial;
+use Dirthara\Authorisation\AuthorisationResult;
+use Dirthara\Authorisation\AuthorisationContext;
+use Dirthara\Authorisation\Tests\Fixtures\FixedPolicy;
+use Dirthara\Authorisation\Exception\AmbiguousPolicyException;
 
 final class AuthoriserTest extends TestCase
 {

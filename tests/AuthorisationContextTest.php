@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Dirthara\Auth\Tests;
+namespace Dirthara\Authorisation\Tests;
 
 use stdClass;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
-use Dirthara\Auth\AuthorisationContext;
-use Dirthara\Auth\Tests\Fixtures\Ability;
+use Dirthara\Authorisation\AuthorisationContext;
+use Dirthara\Authorisation\Tests\Fixtures\Ability;
 
 final class AuthorisationContextTest extends TestCase
 {
