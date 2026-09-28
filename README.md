@@ -4,10 +4,10 @@
 
 # Dirthara Authorisation
 
-Authorisation for the Dirthara framework: policies decide whether an actor may perform an ability on a subject, and an
-authoriser asks every policy and returns one explained result. Usage documentation lives in [`docs`](docs/intro.md) and
-is published on the Dirthara documentation site at <https://dirthara.github.io/docs/>, which documents every package in
-the framework.
+Standalone policy-based authorisation for PHP and the Dirthara framework: policies decide whether an actor may perform
+an ability on a subject, and an authoriser combines their answers into one explained result. Usage documentation lives
+in [`docs`](docs/intro.md) and is published on the Dirthara documentation site at <https://dirthara.github.io/docs/>,
+which documents every package in the framework.
 
 ## Installation
 

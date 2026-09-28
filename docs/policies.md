@@ -89,9 +89,11 @@ $authoriser = new Authoriser([new ArticlePolicy(), new CommentPolicy()]);
 $result = $authoriser->authorise(new AuthorisationContext($user, 'edit', $article));
 ```
 
-Keys of the iterable are ignored, so a generator that repeats a key still passes every policy. Every value must implement
-`Dirthara\Authorisation\Contract\Policy`; the constructor checks each one as it reads it and throws
+Keys of the iterable are ignored, so a generator that repeats a key still passes every policy. Every value must
+implement `Dirthara\Authorisation\Contract\Policy`; the constructor checks each one as it reads it and throws
 `InvalidPolicyException` for the first that does not, rather than failing later with a PHP error.
+
+`authorise()` never throws for a denial: a denied or not applicable authorisation is an ordinary result.
 
 ## Decision strategies
 
@@ -143,7 +145,8 @@ Order never changes the status of a result, only which of several agreeing polic
 
 ## Enforcing a decision
 
-`Enforcer` wraps any `Contract\Authoriser` for code that must stop when the actor may not act:
+`Enforcer` is an opt-in adapter that fails closed. It wraps any `Contract\Authoriser` for code that must stop when the
+actor may not act:
 
 ```php
 use Dirthara\Authorisation\Enforcer;
@@ -157,13 +160,13 @@ if ($enforcer->allows(new AuthorisationContext($user, 'delete', $article))) {
 }
 ```
 
-| Method     | Returns                             | When the result is not `Allowed`         |
-|------------|-------------------------------------|------------------------------------------|
-| `ensure()` | The `Allowed` result and its policy. | Throws `AuthorisationDeniedException`.   |
-| `allows()` | `true` for an `Allowed` result.      | Returns `false`.                         |
+| Method     | Returns                          | When the result is not `Allowed`       |
+|------------|----------------------------------|----------------------------------------|
+| `ensure()` | The `Allowed` result.            | Throws `AuthorisationDeniedException`. |
+| `allows()` | `true` for an `Allowed` result.  | Returns `false`.                       |
 
 Both treat `NotApplicable` as a denial. The exception carries the full result, so a caller can still read the deciding
-policy and the denial:
+policy, its denial, and the decision of every policy that applied:
 
 ```php
 use Dirthara\Authorisation\Exception\AuthorisationDeniedException;
@@ -172,6 +175,10 @@ try {
     $enforcer->ensure($context);
 } catch (AuthorisationDeniedException $exception) {
     $exception->result->denial?->message;
+
+    foreach ($exception->result->decisions as $decision) {
+        $decision->denial?->message;
+    }
 }
 ```
 
