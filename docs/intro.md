@@ -19,4 +19,5 @@ The package is pre-1.0. Each minor version is its own release line, and a new mi
 - [Installation](installation.md) covers requirements and installing the package.
 - [Policies and the authoriser](policies.md) describes how to write a policy and how the authoriser reaches a decision.
 - [Authorisation results](results.md) describes what an authorisation returns, the deciding policy, and denials.
+- [Testing](testing.md) covers replacing the authoriser with a fake in your tests.
 - [Exceptions](exceptions.md) lists what the package throws and the context each exception carries.

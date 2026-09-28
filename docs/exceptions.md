@@ -1,7 +1,7 @@
 ---
 id: exceptions
 title: Exceptions
-sidebar_position: 5
+sidebar_position: 6
 description: The exceptions Dirthara Authorisation throws and the context each one carries.
 ---
 
