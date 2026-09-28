@@ -9,6 +9,7 @@ use LogicException;
 use RuntimeException;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
+use Dirthara\Authorisation\Contract\Policy;
 use Dirthara\Authorisation\AuthorisationResult;
 use Dirthara\Authorisation\AuthorisationContext;
 use Dirthara\Authorisation\Tests\Fixtures\Ability;
@@ -79,6 +80,26 @@ final class AmbiguousPolicyExceptionTest extends TestCase
         self::assertSame('null', $exception->context['subjectType']);
     }
 
+    #[Test]
+    public function it_names_anonymous_policies_without_their_file(): void
+    {
+        $exception = AmbiguousPolicyException::forContext(
+            new AuthorisationContext(new stdClass(), 'edit'),
+            self::anonymousPolicy(),
+            self::anonymousPolicy(),
+        );
+
+        self::assertSame(
+            'The authorisation of "edit" is ambiguous: both '
+            . Policy::class
+            . '@anonymous and '
+            . Policy::class
+            . '@anonymous apply to it.',
+            $exception->getMessage(),
+        );
+        self::assertSame([Policy::class . '@anonymous', Policy::class . '@anonymous'], $exception->context['policies']);
+    }
+
     private static function exceptionFor(AuthorisationContext $context): AmbiguousPolicyException
     {
         return AmbiguousPolicyException::forContext(
@@ -86,5 +107,15 @@ final class AmbiguousPolicyExceptionTest extends TestCase
             new FixedPolicy(AuthorisationResult::allowed()),
             new FixedPolicy(AuthorisationResult::denied()),
         );
+    }
+
+    private static function anonymousPolicy(): Policy
+    {
+        return new class implements Policy {
+            public function authorise(AuthorisationContext $context): AuthorisationResult
+            {
+                return AuthorisationResult::allowed();
+            }
+        };
     }
 }

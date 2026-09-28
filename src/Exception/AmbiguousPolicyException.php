@@ -37,14 +37,14 @@ final class AmbiguousPolicyException extends RuntimeException implements Authori
             message: sprintf(
                 'The authorisation of "%s" is ambiguous: both %s and %s apply to it.',
                 $ability,
-                $first::class,
-                $second::class,
+                get_debug_type($first),
+                get_debug_type($second),
             ),
             context: [
                 'ability' => $context->ability,
                 'actorType' => get_debug_type($context->actor),
                 'subjectType' => get_debug_type($context->subject),
-                'policies' => [$first::class, $second::class],
+                'policies' => [get_debug_type($first), get_debug_type($second)],
             ],
         );
     }

@@ -31,7 +31,9 @@ Both live in the `Dirthara\Authorisation\Exception` namespace.
 
 ## AmbiguousPolicyException
 
-The message names the ability and the classes of the first two policies that applied. An enum ability is written as its
+The message names the ability and the classes of the first two policies that applied. An anonymous policy class is
+named by the interface or class it extends, such as `Dirthara\Authorisation\Contract\Policy@anonymous`, without the
+file it was declared in. An enum ability is written as its
 case, such as `App\Ability::Edit`, and control characters in a string ability are escaped so the message cannot forge a
 log line.
 
@@ -40,7 +42,7 @@ log line.
 | `ability`     | `string\|UnitEnum` | The ability from the context.                               |
 | `actorType`   | `string`           | The type of the actor, such as its class name.              |
 | `subjectType` | `string`           | The type of the subject, or the string `null` without one.  |
-| `policies`    | `list<string>`     | The classes of the first two policies that applied.         |
+| `policies`    | `list<string>`     | The types of the first two policies that applied.           |
 
 The actor and subject are recorded by type only, so the context does not copy user data into a log.
 
@@ -53,4 +55,4 @@ A `NotApplicable` result means no policy decided, so it cannot carry a deciding 
 
 | Context key | Type     | Meaning                                    |
 |-------------|----------|--------------------------------------------|
-| `policy`    | `string` | The class of the policy that was attached. |
+| `policy`    | `string` | The type of the policy that was attached.  |

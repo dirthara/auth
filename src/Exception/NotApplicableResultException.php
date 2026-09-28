@@ -9,6 +9,7 @@ use RuntimeException;
 use Dirthara\Authorisation\Contract\Policy;
 
 use function sprintf;
+use function get_debug_type;
 
 final class NotApplicableResultException extends RuntimeException implements AuthorisationException
 {
@@ -29,9 +30,9 @@ final class NotApplicableResultException extends RuntimeException implements Aut
         return new self(
             message: sprintf(
                 'A not applicable authorisation result cannot have a deciding policy, but %s was attached to one.',
-                $policy::class,
+                get_debug_type($policy),
             ),
-            context: ['policy' => $policy::class],
+            context: ['policy' => get_debug_type($policy)],
         );
     }
 }

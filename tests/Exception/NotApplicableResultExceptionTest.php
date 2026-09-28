@@ -7,7 +7,9 @@ namespace Dirthara\Authorisation\Tests\Exception;
 use RuntimeException;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
+use Dirthara\Authorisation\Contract\Policy;
 use Dirthara\Authorisation\AuthorisationResult;
+use Dirthara\Authorisation\AuthorisationContext;
 use Dirthara\Authorisation\Tests\Fixtures\FixedPolicy;
 use Dirthara\Authorisation\Exception\AuthorisationException;
 use Dirthara\Authorisation\Exception\NotApplicableResultException;
@@ -30,5 +32,29 @@ final class NotApplicableResultExceptionTest extends TestCase
             $exception->getMessage(),
         );
         self::assertSame(['policy' => FixedPolicy::class], $exception->context);
+    }
+
+    #[Test]
+    public function it_names_an_anonymous_policy_without_its_file(): void
+    {
+        $exception = NotApplicableResultException::cannotHavePolicy(self::anonymousPolicy());
+
+        self::assertSame(
+            'A not applicable authorisation result cannot have a deciding policy, but '
+            . Policy::class
+            . '@anonymous was attached to one.',
+            $exception->getMessage(),
+        );
+        self::assertSame(['policy' => Policy::class . '@anonymous'], $exception->context);
+    }
+
+    private static function anonymousPolicy(): Policy
+    {
+        return new class implements Policy {
+            public function authorise(AuthorisationContext $context): AuthorisationResult
+            {
+                return AuthorisationResult::allowed();
+            }
+        };
     }
 }
