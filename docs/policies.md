@@ -59,6 +59,24 @@ Return `notApplicable()` for every context the policy is not responsible for. `d
 responsible and says no. Using `denied()` for a context the policy does not own makes it collide with the policy that
 does own it under `OnlyOne`, and overrules it under `All`.
 
+### Keep policies free of side effects
+
+Policies should behave as pure decision functions and should not perform side effects. A policy reads the context and
+returns a result; it does not write to a database, send a message, log an audit entry, or change the actor or subject.
+
+A policy cannot know how often, or why, it is asked:
+
+- One authorisation asks several policies, and every policy is asked even when it does not apply.
+- `AtLeastOne` and `All` keep asking the remaining policies after the outcome is already certain.
+- Callers may check the same authorisation more than once, for example in a controller and again in a service.
+- An application may ask the same question to decide what to show, such as whether to render an edit button, as well
+  as to decide whether to act.
+
+A side effect in a policy would run a different number of times than the action it guards, including for actions that
+never happen. Record what was decided after the authorisation instead, from the result.
+
+The package does not enforce this; it is part of the contract a policy is expected to keep.
+
 ## The authoriser
 
 `Authoriser` takes the policies to ask, as an array or any other iterable, and reads them once when it is constructed:
@@ -97,9 +115,9 @@ With every strategy, policies that return `NotApplicable` are ignored, and the r
 applies. `OnlyOne` is the default because it keeps one policy responsible for every question; choose `AtLeastOne` or
 `All` when several policies are meant to answer the same question, such as an ownership rule alongside a role rule.
 
-The authoriser always asks every policy, even when the outcome is already certain, so `consulted` lists all of them and
-a policy with side effects runs on every authorisation. `OnlyOne` is the exception: it stops at the second policy that
-applies and throws.
+The authoriser always asks every policy, even when the outcome is already certain, so `consulted` and `decisions` are
+complete and the result does not depend on where evaluation stopped. `OnlyOne` is the exception: it stops at the second
+policy that applies and throws.
 
 Every result records the decision of each policy that applied in `decisions`, and every policy asked in `consulted`.
 `policy` names a single policy only when that policy's decision alone determined the result:
