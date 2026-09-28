@@ -22,6 +22,23 @@ try {
 }
 ```
 
+## Safe to log
+
+Exception messages and context are written for logs and error trackers, so they never hold user data or a string that
+could forge a log line:
+
+- The actor and subject are recorded by type only, such as their class name.
+- A string ability and a denial's message key are stored with their control characters escaped: a line break becomes
+  the two characters `\n`, and a carriage return or tab becomes `\r` or `\t`. An enum ability is stored as its case,
+  such as `App\Ability::Edit`.
+- Policies are recorded by type, and an anonymous policy class without the file it was declared in.
+- Denial messages and parameters are never copied into a message or context.
+
+The original values stay available where the caller already has them: the context passed to `authorise()`, and the
+result that `AuthorisationDeniedException` carries in `result`.
+
+## Exceptions thrown
+
 | Exception                      | Extends            | Thrown when                                                           |
 |--------------------------------|--------------------|-----------------------------------------------------------------------|
 | `AmbiguousPolicyException`     | `RuntimeException` | Under `OnlyOne`, more than one policy applies to one context.        |
@@ -39,7 +56,7 @@ a string ability are escaped so the message cannot forge a log line.
 
 | Context key   | Type               | Meaning                                                     |
 |---------------|--------------------|-------------------------------------------------------------|
-| `ability`     | `string\|UnitEnum` | The ability from the context.                               |
+| `ability`     | `string`           | The ability as written in the message.                      |
 | `actorType`   | `string`           | The type of the actor, such as its class name.              |
 | `subjectType` | `string`           | The type of the subject, or the string `null` without one.  |
 | `policies`    | `list<string>`     | The types of the first two policies that applied.           |
@@ -68,10 +85,10 @@ The `result` property holds the result that was not allowed, with its status, de
 
 | Context key   | Type                  | Meaning                                                              |
 |---------------|-----------------------|----------------------------------------------------------------------|
-| `ability`     | `string\|UnitEnum`    | The ability from the context.                                        |
+| `ability`     | `string`              | The ability as written in the message.                               |
 | `actorType`   | `string`              | The type of the actor, such as its class name.                       |
 | `subjectType` | `string`              | The type of the subject, or the string `null` without one.           |
 | `status`      | `AuthorisationStatus` | `Denied` or `NotApplicable`.                                         |
 | `policy`      | `?string`             | The type of the deciding policy, or `null` for a collective result.  |
-| `messageKey`  | `?string`             | The denial's message key without its parameters, or `null`.          |
+| `messageKey`  | `?string`             | The deciding denial's message key, escaped, without its parameters.  |
 | `consulted`   | `list<string>`        | The types of the policies the authoriser asked, in order.            |

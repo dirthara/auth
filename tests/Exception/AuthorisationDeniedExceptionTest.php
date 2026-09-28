@@ -70,11 +70,34 @@ final class AuthorisationDeniedExceptionTest extends TestCase
     public function it_escapes_control_characters_in_the_ability(): void
     {
         $exception = AuthorisationDeniedException::denied(
-            new AuthorisationContext(new stdClass(), "edit\nforged"),
+            new AuthorisationContext(new stdClass(), "edit\nforged\r\tline"),
             AuthorisationResult::denied(),
         );
 
-        self::assertSame('The authorisation of "edit\\nforged" was denied.', $exception->getMessage());
+        self::assertSame('The authorisation of "edit\\nforged\\r\\tline" was denied.', $exception->getMessage());
+        self::assertSame('edit\\nforged\\r\\tline', $exception->context['ability']);
+    }
+
+    #[Test]
+    public function it_escapes_control_characters_in_the_message_key(): void
+    {
+        $exception = AuthorisationDeniedException::denied(
+            new AuthorisationContext(new stdClass(), 'edit'),
+            AuthorisationResult::denied(new AuthorisationDenial("Denied.\n[critical] forged\r\tline")),
+        );
+
+        self::assertSame('Denied.\\n[critical] forged\\r\\tline', $exception->context['messageKey']);
+    }
+
+    #[Test]
+    public function it_records_an_enum_ability_by_its_case(): void
+    {
+        $exception = AuthorisationDeniedException::noPolicyApplies(
+            new AuthorisationContext(new stdClass(), Ability::Edit),
+            AuthorisationResult::notApplicable(),
+        );
+
+        self::assertSame(Ability::class . '::Edit', $exception->context['ability']);
     }
 
     #[Test]

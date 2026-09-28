@@ -36,7 +36,7 @@ final class AmbiguousPolicyException extends RuntimeException implements Authori
                 get_debug_type($second),
             ),
             context: [
-                'ability' => $context->ability,
+                'ability' => self::printableAbility($context->ability),
                 'actorType' => get_debug_type($context->actor),
                 'subjectType' => get_debug_type($context->subject),
                 'policies' => [get_debug_type($first), get_debug_type($second)],

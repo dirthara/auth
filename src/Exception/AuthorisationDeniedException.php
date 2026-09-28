@@ -65,12 +65,12 @@ final class AuthorisationDeniedException extends RuntimeException implements Aut
     private static function contextFor(AuthorisationContext $context, AuthorisationResult $result): array
     {
         return [
-            'ability' => $context->ability,
+            'ability' => self::printableAbility($context->ability),
             'actorType' => get_debug_type($context->actor),
             'subjectType' => get_debug_type($context->subject),
             'status' => $result->status,
             'policy' => $result->policy === null ? null : get_debug_type($result->policy),
-            'messageKey' => $result->denial?->messageKey,
+            'messageKey' => $result->denial === null ? null : self::printable($result->denial->messageKey),
             'consulted' => array_map(get_debug_type(...), $result->consulted),
         ];
     }

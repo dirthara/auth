@@ -45,15 +45,19 @@ final class AmbiguousPolicyExceptionTest extends TestCase
             'The authorisation of "' . Ability::class . '::Edit" is ambiguous',
             $exception->getMessage(),
         );
-        self::assertSame(Ability::Edit, $exception->context['ability']);
+        self::assertSame(Ability::class . '::Edit', $exception->context['ability']);
     }
 
     #[Test]
     public function it_escapes_control_characters_in_the_ability(): void
     {
-        $exception = self::exceptionFor(new AuthorisationContext(new stdClass(), "edit\nforged"));
+        $exception = self::exceptionFor(new AuthorisationContext(new stdClass(), "edit\nforged\r\tline"));
 
-        self::assertStringStartsWith('The authorisation of "edit\\nforged" is ambiguous', $exception->getMessage());
+        self::assertStringStartsWith(
+            'The authorisation of "edit\\nforged\\r\\tline" is ambiguous',
+            $exception->getMessage(),
+        );
+        self::assertSame('edit\\nforged\\r\\tline', $exception->context['ability']);
     }
 
     #[Test]
