@@ -11,6 +11,9 @@ use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Dirthara\Authorisation\AuthorisationDenial;
+use Dirthara\Authorisation\Tests\Fixtures\Role;
+use Dirthara\Authorisation\Tests\Fixtures\Level;
+use Dirthara\Authorisation\Tests\Fixtures\Ability;
 
 final class AuthorisationDenialTest extends TestCase
 {
@@ -92,6 +95,9 @@ final class AuthorisationDenialTest extends TestCase
         yield 'true' => [true, 'true'];
         yield 'false' => [false, 'false'];
         yield 'null' => [null, 'null'];
+        yield 'string backed enum' => [Role::Admin, 'admin'];
+        yield 'integer backed enum' => [Level::High, '3'];
+        yield 'pure enum' => [Ability::Edit, 'Edit'];
         yield 'stringable' => [
             new class() implements Stringable {
                 public function __toString(): string
@@ -104,6 +110,7 @@ final class AuthorisationDenialTest extends TestCase
         yield 'list' => [[1, 2], '1, 2'];
         yield 'mixed list' => [['a', true, null, 1.5], 'a, true, null, 1.5'];
         yield 'nested list' => [[1, [2, 3]], '1, 2, 3'];
+        yield 'list of enums' => [[Role::Admin, Ability::Edit], 'admin, Edit'];
         yield 'empty array' => [[], ''];
         yield 'object' => [new stdClass(), 'stdClass'];
     }

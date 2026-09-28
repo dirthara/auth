@@ -146,6 +146,8 @@ Every placeholder `{name}` becomes the parameter of the same name, rendered the 
 | A string, integer, or float | Its value.                                |
 | `true` or `false`           | `true` or `false`.                        |
 | `null`                      | `null`.                                   |
+| A backed enum case          | Its value.                                |
+| Any other enum case         | Its name.                                 |
 | A `Stringable`              | Its string value.                         |
 | An array                    | Its rendered values, joined with `, `.    |
 | Any other object            | Its class name.                           |
