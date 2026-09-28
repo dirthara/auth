@@ -52,6 +52,9 @@ $result->status;   // AuthorisationStatus::Allowed
 $result->policy;   // $articlePolicy
 ```
 
+`Authoriser` implements `Dirthara\Authorisation\Contract\Authoriser`. Code that only needs a decision should depend on
+the contract, so it does not rely on how the decision is reached.
+
 For a result returned by `Authoriser`:
 
 | Status          | `policy`                            |

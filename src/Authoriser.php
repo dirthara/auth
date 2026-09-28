@@ -6,10 +6,11 @@ namespace Dirthara\Authorisation;
 
 use Dirthara\Authorisation\Contract\Policy;
 use Dirthara\Authorisation\Exception\AmbiguousPolicyException;
+use Dirthara\Authorisation\Contract\Authoriser as AuthoriserContract;
 
 use function iterator_to_array;
 
-final readonly class Authoriser
+final readonly class Authoriser implements AuthoriserContract
 {
     /**
      * @var list<Policy>

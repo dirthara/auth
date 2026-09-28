@@ -15,9 +15,16 @@ use Dirthara\Authorisation\AuthorisationResult;
 use Dirthara\Authorisation\AuthorisationContext;
 use Dirthara\Authorisation\Tests\Fixtures\FixedPolicy;
 use Dirthara\Authorisation\Exception\AmbiguousPolicyException;
+use Dirthara\Authorisation\Contract\Authoriser as AuthoriserContract;
 
 final class AuthoriserTest extends TestCase
 {
+    #[Test]
+    public function it_implements_the_authoriser_contract(): void
+    {
+        self::assertInstanceOf(AuthoriserContract::class, new Authoriser([]));
+    }
+
     #[Test]
     public function it_does_not_apply_without_policies(): void
     {
